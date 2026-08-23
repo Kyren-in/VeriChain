@@ -10,7 +10,7 @@ export default function VerifierPortal() {
   // Quick preset sample payloads to make demoing smooth & instant
   const loadPreset = async (type) => {
     try {
-      const res = await fetch('http://localhost:5000/api/credentials');
+      const res = await fetch('/api/credentials');
       const allCreds = await res.json();
       
       const aaravCred = allCreds.find(c => c.id === 'VC-2026-88492');
@@ -45,7 +45,7 @@ export default function VerifierPortal() {
 
     try {
       let parsed = JSON.parse(inputPayload);
-      const res = await fetch('http://localhost:5000/api/credentials/verify', {
+      const res = await fetch('/api/credentials/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(parsed)
@@ -64,7 +64,7 @@ export default function VerifierPortal() {
     try {
       const parsed = JSON.parse(inputPayload);
       setRevoking(true);
-      const res = await fetch('http://localhost:5000/api/credentials/revoke', {
+      const res = await fetch('/api/credentials/revoke', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: parsed.id, reason: 'Revoked by Checkpoint Officer / Front Desk' })

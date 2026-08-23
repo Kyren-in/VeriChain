@@ -12,7 +12,7 @@ export default function HolderWallet() {
   const fetchCredentials = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/credentials');
+      const res = await fetch('/api/credentials');
       const data = await res.json();
       setCredentials(data);
     } catch (err) {

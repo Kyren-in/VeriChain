@@ -9,7 +9,7 @@ export default function BlockchainExplorer() {
   const fetchBlocks = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/blocks');
+      const res = await fetch('/api/blocks');
       const data = await res.json();
       setBlocks(data.blocks);
       setChainLength(data.chainLength);
