@@ -102,7 +102,7 @@ app.get('/api/blocks', (req, res) => {
 });
 
 // Serve frontend for non-API routes
-app.get('*', (req, res) => {
+app.get('{*path}', (req, res) => {
   if (!req.path.startsWith('/api')) {
     res.sendFile(path.join(distPath, 'index.html'));
   }
