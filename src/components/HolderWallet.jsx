@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import { Wallet, QrCode, Shield, CheckCircle, RefreshCw, X, AlertTriangle, Eye, EyeOff } from 'lucide-react';
-
+import { Wallet, QrCode, Shield, CheckCircle, RefreshCw, X, AlertTriangle, Eye, EyeOff, KeyRound, Trash2, Settings } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 import { API_BASE_URL } from '../api';
 
 export default function HolderWallet() {
@@ -10,6 +10,29 @@ export default function HolderWallet() {
   const [selectedCred, setSelectedCred] = useState(null);
   const [qrUrl, setQrUrl] = useState('');
   const [privacyMode, setPrivacyMode] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [settingsMsg, setSettingsMsg] = useState('');
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!newPassword) return;
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setSettingsMsg('Password updated successfully!');
+      setNewPassword('');
+    } catch (err) {
+      setSettingsMsg(err.message || 'Error updating password');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm('Are you sure you want to delete your Digital Identity profile? This will purge local credentials.')) {
+      setCredentials([]);
+      setSettingsMsg('Digital Identity profile purged successfully.');
+    }
+  };
 
   const fetchCredentials = async () => {
     setLoading(true);
@@ -78,8 +101,74 @@ export default function HolderWallet() {
           <button onClick={fetchCredentials} className="btn-secondary">
             <RefreshCw size={16} /> Refresh
           </button>
+
+          <button onClick={() => setIsSettingsOpen(true)} className="btn-secondary">
+            <Settings size={16} /> Account Options
+          </button>
         </div>
       </div>
+
+      {/* Account Settings Modal */}
+      {isSettingsOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', padding: '28px', borderRadius: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Settings color="var(--primary)" size={22} />
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '700' }}>Account & Security</h3>
+              </div>
+              <button onClick={() => setIsSettingsOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {settingsMsg && (
+              <div style={{ padding: '10px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary)', fontSize: '0.85rem', marginBottom: '16px' }}>
+                {settingsMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reset Password</label>
+              <input
+                type="password"
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--border-color)',
+                  color: '#fff'
+                }}
+              />
+              <button type="submit" className="btn-primary" style={{ padding: '10px', justifyContent: 'center' }}>
+                <KeyRound size={16} /> Update Password
+              </button>
+            </form>
+
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+              <label style={{ fontSize: '0.8rem', color: 'var(--accent-pink)', display: 'block', marginBottom: '8px' }}>Danger Zone</label>
+              <button onClick={handleDeleteAccount} className="btn-secondary" style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: 'var(--accent-pink)', width: '100%', justifyContent: 'center' }}>
+                <Trash2 size={16} /> Delete Identity Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Credential Grid */}
       {loading ? (

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { UserCheck, ShieldCheck, Hash, Sparkles, Calendar, Globe, CreditCard } from 'lucide-react';
-
+import { UserCheck, ShieldCheck, Hash, Sparkles, Calendar, Globe, CreditCard, Ban, Camera } from 'lucide-react';
+import QrScannerModal from './QrScannerModal';
 import { API_BASE_URL } from '../api';
 
 export default function IssuerPortal({ onCredentialIssued }) {
+  const [activeSubTab, setActiveSubTab] = useState('issue'); // 'issue' | 'revoke'
   const [formData, setFormData] = useState({
     holderName: '',
     idType: 'Aadhaar / Passport',
@@ -15,6 +16,43 @@ export default function IssuerPortal({ onCredentialIssued }) {
 
   const [loading, setLoading] = useState(false);
   const [lastIssued, setLastIssued] = useState(null);
+  const [revokeId, setRevokeId] = useState('');
+  const [revokeReason, setRevokeReason] = useState('Safety Violation / Fraud Flagged');
+  const [revokeStatus, setRevokeStatus] = useState(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  const handleRevoke = async (e) => {
+    e.preventDefault();
+    if (!revokeId) return;
+    setLoading(true);
+    setRevokeStatus(null);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/credentials/revoke`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: revokeId, reason: revokeReason })
+      });
+      const data = await res.json();
+      setRevokeStatus(data);
+      if (data.success) {
+        setRevokeId('');
+      }
+    } catch (err) {
+      alert('Error revoking credential: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQrScanned = (scannedText) => {
+    try {
+      const payload = JSON.parse(scannedText);
+      if (payload.id) setRevokeId(payload.id);
+    } catch (err) {
+      setRevokeId(scannedText);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

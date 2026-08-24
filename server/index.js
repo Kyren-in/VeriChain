@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { ledger } from './ledger.js';
+import { sendEmail } from './brevo.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +15,41 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(distPath));
+
+// Auth & Brevo Email Routes
+app.post('/api/auth/send-verification', async (req, res) => {
+  const { email, fullName, role } = req.body;
+  const result = await sendEmail({
+    to: email,
+    subject: 'Welcome to VeriChain - Please Verify Your Account',
+    htmlContent: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #111;">
+        <h2>Welcome to VeriChain, ${fullName || 'User'}!</h2>
+        <p>Thank you for registering your account as <strong>${role?.toUpperCase()}</strong>.</p>
+        <p>Please click the button below to verify your email address and activate your Decentralized Identity profile.</p>
+        <a href="https://veri-chain-mocha.vercel.app/" style="background: #6366f1; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">Verify Account</a>
+      </div>
+    `
+  });
+  res.json(result);
+});
+
+app.post('/api/auth/send-reset-email', async (req, res) => {
+  const { email } = req.body;
+  const result = await sendEmail({
+    to: email,
+    subject: 'VeriChain Password Reset Instructions',
+    htmlContent: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #111;">
+        <h2>VeriChain Password Reset Request</h2>
+        <p>We received a request to reset your password.</p>
+        <p>Click below to reset your credentials securely:</p>
+        <a href="https://veri-chain-mocha.vercel.app/" style="background: #ef4444; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">Reset Password</a>
+      </div>
+    `
+  });
+  res.json(result);
+});
 
 // API Routes
 

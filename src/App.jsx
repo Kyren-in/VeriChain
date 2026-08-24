@@ -1,12 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import IssuerPortal from './components/IssuerPortal';
 import HolderWallet from './components/HolderWallet';
 import VerifierPortal from './components/VerifierPortal';
 import BlockchainExplorer from './components/BlockchainExplorer';
-import { Shield, UserCheck, Wallet, Scan, Blocks, Sparkles, Lock, ArrowUpRight } from 'lucide-react';
+import AuthModal from './components/AuthModal';
+import { supabase } from './lib/supabaseClient';
+import { Shield, UserCheck, Wallet, Scan, Blocks, Lock, LogIn, LogOut, User, Menu, X } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('issuer');
+  const [session, setSession] = useState(null);
+  const [userRole, setUserRole] = useState('guest'); // 'guest' | 'user' | 'issuer' | 'verifier'
+  const [activeTab, setActiveTab] = useState('explorer');
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        const role = session.user.user_metadata?.role || 'user';
+        setUserRole(role);
+        // Default tab according to role
+        if (role === 'issuer') setActiveTab('issuer');
+        else if (role === 'verifier') setActiveTab('verifier');
+        else setActiveTab('wallet');
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session?.user) {
+        const role = session.user.user_metadata?.role || 'user';
+        setUserRole(role);
+        if (role === 'issuer') setActiveTab('issuer');
+        else if (role === 'verifier') setActiveTab('verifier');
+        else setActiveTab('wallet');
+      } else {
+        setUserRole('guest');
+        setActiveTab('explorer');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUserRole('guest');
+    setActiveTab('explorer');
+  };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -46,50 +88,124 @@ export default function App() {
             </div>
           </div>
 
-          {/* Role Navigation Tabs */}
-          <nav style={{ display: 'flex', background: 'rgba(18, 24, 38, 0.8)', padding: '6px', borderRadius: '12px', border: '1px solid var(--border-color)', gap: '4px' }}>
-            <button
-              onClick={() => setActiveTab('issuer')}
-              className={activeTab === 'issuer' ? 'btn-primary' : 'btn-secondary'}
-              style={{ border: 'none', boxShadow: activeTab === 'issuer' ? undefined : 'none' }}
-            >
-              <UserCheck size={18} /> Issuer Portal
-            </button>
+          {/* Navigation & Auth */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Desktop Navigation Tabs */}
+            <nav className="desktop-nav" style={{ display: 'flex', background: 'rgba(18, 24, 38, 0.8)', padding: '6px', borderRadius: '12px', border: '1px solid var(--border-color)', gap: '4px' }}>
+              {(userRole === 'issuer' || userRole === 'admin') && (
+                <button
+                  onClick={() => setActiveTab('issuer')}
+                  className={activeTab === 'issuer' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ border: 'none', boxShadow: activeTab === 'issuer' ? undefined : 'none' }}
+                >
+                  <UserCheck size={18} /> Issuer Portal
+                </button>
+              )}
 
-            <button
-              onClick={() => setActiveTab('wallet')}
-              className={activeTab === 'wallet' ? 'btn-primary' : 'btn-secondary'}
-              style={{ border: 'none', boxShadow: activeTab === 'wallet' ? undefined : 'none' }}
-            >
-              <Wallet size={18} /> Holder Wallet
-            </button>
+              {(userRole === 'user' || userRole === 'admin') && (
+                <button
+                  onClick={() => setActiveTab('wallet')}
+                  className={activeTab === 'wallet' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ border: 'none', boxShadow: activeTab === 'wallet' ? undefined : 'none' }}
+                >
+                  <Wallet size={18} /> Holder Wallet
+                </button>
+              )}
 
-            <button
-              onClick={() => setActiveTab('verifier')}
-              className={activeTab === 'verifier' ? 'btn-primary' : 'btn-secondary'}
-              style={{ border: 'none', boxShadow: activeTab === 'verifier' ? undefined : 'none' }}
-            >
-              <Scan size={18} /> Verifier Terminal
-            </button>
+              {(userRole === 'verifier' || userRole === 'admin') && (
+                <button
+                  onClick={() => setActiveTab('verifier')}
+                  className={activeTab === 'verifier' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ border: 'none', boxShadow: activeTab === 'verifier' ? undefined : 'none' }}
+                >
+                  <Scan size={18} /> Verifier Terminal
+                </button>
+              )}
 
+              {/* On-Chain Explorer visible to all */}
+              <button
+                onClick={() => setActiveTab('explorer')}
+                className={activeTab === 'explorer' ? 'btn-primary' : 'btn-secondary'}
+                style={{ border: 'none', boxShadow: activeTab === 'explorer' ? undefined : 'none' }}
+              >
+                <Blocks size={18} /> On-Chain Explorer
+              </button>
+            </nav>
+
+            {/* Auth Action Button */}
+            {session ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span className="badge-valid" style={{ textTransform: 'uppercase', fontSize: '0.7rem' }}>
+                  <User size={12} style={{ marginRight: '4px' }} /> {userRole}
+                </span>
+                <button onClick={handleSignOut} className="btn-secondary" style={{ padding: '8px 14px' }}>
+                  <LogOut size={16} /> Sign Out
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setIsAuthOpen(true)} className="btn-primary" style={{ padding: '8px 16px' }}>
+                <LogIn size={16} /> Sign In
+              </button>
+            )}
+
+            {/* Mobile Menu Toggle Button */}
             <button
-              onClick={() => setActiveTab('explorer')}
-              className={activeTab === 'explorer' ? 'btn-primary' : 'btn-secondary'}
-              style={{ border: 'none', boxShadow: activeTab === 'explorer' ? undefined : 'none' }}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="btn-secondary mobile-menu-btn"
+              style={{ display: 'none', padding: '8px' }}
             >
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Responsive Dropdown Navigation */}
+        {isMobileMenuOpen && (
+          <div
+            style={{
+              padding: '16px 24px',
+              borderTop: '1px solid var(--border-color)',
+              background: 'rgba(11, 15, 25, 0.95)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}
+          >
+            {(userRole === 'issuer' || userRole === 'admin') && (
+              <button onClick={() => { setActiveTab('issuer'); setIsMobileMenuOpen(false); }} className={activeTab === 'issuer' ? 'btn-primary' : 'btn-secondary'} style={{ width: '100%', justifyContent: 'flex-start' }}>
+                <UserCheck size={18} /> Issuer Portal
+              </button>
+            )}
+            {(userRole === 'user' || userRole === 'admin') && (
+              <button onClick={() => { setActiveTab('wallet'); setIsMobileMenuOpen(false); }} className={activeTab === 'wallet' ? 'btn-primary' : 'btn-secondary'} style={{ width: '100%', justifyContent: 'flex-start' }}>
+                <Wallet size={18} /> Holder Wallet
+              </button>
+            )}
+            {(userRole === 'verifier' || userRole === 'admin') && (
+              <button onClick={() => { setActiveTab('verifier'); setIsMobileMenuOpen(false); }} className={activeTab === 'verifier' ? 'btn-primary' : 'btn-secondary'} style={{ width: '100%', justifyContent: 'flex-start' }}>
+                <Scan size={18} /> Verifier Terminal
+              </button>
+            )}
+            <button onClick={() => { setActiveTab('explorer'); setIsMobileMenuOpen(false); }} className={activeTab === 'explorer' ? 'btn-primary' : 'btn-secondary'} style={{ width: '100%', justifyContent: 'flex-start' }}>
               <Blocks size={18} /> On-Chain Explorer
             </button>
-          </nav>
-        </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content Area */}
       <main style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '32px 24px' }}>
-        {activeTab === 'issuer' && <IssuerPortal onCredentialIssued={() => {}} />}
-        {activeTab === 'wallet' && <HolderWallet />}
-        {activeTab === 'verifier' && <VerifierPortal />}
+        {activeTab === 'issuer' && (userRole === 'issuer' || userRole === 'admin') && <IssuerPortal onCredentialIssued={() => {}} />}
+        {activeTab === 'wallet' && (userRole === 'user' || userRole === 'admin') && <HolderWallet />}
+        {activeTab === 'verifier' && (userRole === 'verifier' || userRole === 'admin') && <VerifierPortal />}
         {activeTab === 'explorer' && <BlockchainExplorer />}
       </main>
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onAuthSuccess={(user) => {
+        const role = user.user_metadata?.role || 'user';
+        setUserRole(role);
+      }} />
 
       {/* Footer */}
       <footer style={{ borderTop: '1px solid var(--border-color)', background: 'rgba(11, 15, 25, 0.9)', padding: '20px 24px', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>

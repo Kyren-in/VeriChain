@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Scan, ShieldCheck, ShieldAlert, AlertOctagon, RotateCcw, Ban, CheckCircle2, FileJson, Edit3 } from 'lucide-react';
-
+import { Scan, ShieldCheck, ShieldAlert, AlertOctagon, RotateCcw, Ban, CheckCircle2, FileJson, Edit3, Camera } from 'lucide-react';
+import QrScannerModal from './QrScannerModal';
 import { API_BASE_URL } from '../api';
 
 export default function VerifierPortal() {
@@ -8,6 +8,7 @@ export default function VerifierPortal() {
   const [verificationResult, setVerificationResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [revoking, setRevoking] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   // Quick preset sample payloads to make demoing smooth & instant
   const loadPreset = async (type) => {
@@ -103,6 +104,9 @@ export default function VerifierPortal() {
             TEST DEMO SCENARIOS:
           </label>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button onClick={() => setIsScannerOpen(true)} className="btn-primary" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>
+              <Camera size={14} /> Scan with Camera
+            </button>
             <button onClick={() => loadPreset('valid')} className="btn-secondary" style={{ fontSize: '0.8rem', padding: '6px 12px' }}>
               <CheckCircle2 size={14} color="#34d399" /> Valid Credential
             </button>
@@ -114,6 +118,12 @@ export default function VerifierPortal() {
             </button>
           </div>
         </div>
+
+        <QrScannerModal
+          isOpen={isScannerOpen}
+          onClose={() => setIsScannerOpen(false)}
+          onScanSuccess={(text) => setInputPayload(text)}
+        />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <textarea
