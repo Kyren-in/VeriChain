@@ -174,7 +174,7 @@ export default function App() {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="btn-secondary mobile-menu-btn"
-              style={{ display: 'none', padding: '8px' }}
+              style={{ padding: '8px' }}
             >
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>

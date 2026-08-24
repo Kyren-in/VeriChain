@@ -31,6 +31,10 @@
   padding: 0;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   background-color: var(--bg-primary);
   background-image: 
@@ -42,6 +46,8 @@ body {
   font-family: var(--font-sans);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  word-break: break-word;
 }
 
 /* Scrollbar */
@@ -210,3 +216,104 @@ body {
   align-items: center;
   gap: 4px;
 }
+
+/* Hide hamburger on desktop — shown via media query on mobile */
+.mobile-menu-btn { display: none; }
+
+/* ============================================================
+   MOBILE RESPONSIVE — ≤768px
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* Hide desktop nav tabs, show hamburger */
+  .desktop-nav { display: none !important; }
+  .mobile-menu-btn { display: flex !important; }
+
+  /* Navbar row */
+  header > div { padding: 12px 16px !important; flex-wrap: wrap; gap: 8px; }
+  header h1 { font-size: 1.05rem !important; }
+  header p { display: none; }
+
+  /* Main content area */
+  main { padding: 12px 14px !important; }
+
+  /* Glass panels */
+  .glass-panel { padding: 16px !important; border-radius: 12px !important; }
+
+  /* Collapse ALL CSS grid columns to 1 */
+  div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+
+  /* Flex rows → stack */
+  div[style*="justify-content: space-between"] { flex-wrap: wrap; gap: 10px; }
+
+  /* Buttons */
+  .btn-primary, .btn-secondary {
+    font-size: 0.83rem !important;
+    padding: 9px 13px !important;
+  }
+
+  /* Inputs */
+  .input-field { font-size: 0.88rem !important; padding: 10px 12px !important; }
+
+  /* Mono hash text */
+  .mono-text { word-break: break-all; font-size: 0.7rem !important; }
+
+  /* Typography */
+  h2 { font-size: 1.05rem !important; }
+  h3 { font-size: 0.95rem !important; }
+
+  /* Badges */
+  .badge-valid, .badge-revoked, .badge-tampered {
+    font-size: 0.63rem !important;
+    padding: 2px 6px !important;
+  }
+
+  /* Modals — slide up from bottom as bottom-sheet */
+  div[style*="position: fixed"] {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  div[style*="maxWidth: '440px'"],
+  div[style*="max-width: 440px"] {
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Footer */
+  footer > div { flex-direction: column !important; gap: 8px !important; text-align: center !important; }
+
+  /* Verifier portal — center button */
+  .glass-panel div[style*="justify-content: space-between"] { justify-content: flex-start !important; flex-direction: column; align-items: flex-start; }
+}
+
+/* ============================================================
+   SMALL PHONES — ≤480px
+   ============================================================ */
+@media (max-width: 480px) {
+  main { padding: 10px !important; }
+  .glass-panel { padding: 14px !important; }
+  header h1 { font-size: 0.95rem !important; }
+
+  .btn-primary, .btn-secondary {
+    padding: 8px 12px !important;
+    font-size: 0.78rem !important;
+    gap: 5px !important;
+  }
+
+  /* Full-width buttons inside cards */
+  .glass-panel .btn-primary,
+  .glass-panel .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* QR code smaller */
+  img[alt="Credential QR"] { width: 170px !important; height: 170px !important; }
+
+  /* Textarea rows */
+  textarea { font-size: 0.78rem !important; }
+}
+
