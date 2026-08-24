@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { Shield, Mail, Lock, User, UserCheck, X } from 'lucide-react';
-import { API_BASE_URL } from '../api';
+import { Shield, Mail, Lock, User, UserCheck, X, Phone } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [isRegister, setIsRegister] = useState(false);
@@ -9,6 +8,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [step, setStep] = useState(1); // 1: input details, 2: enter OTP
   const [otpInput, setOtpInput] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('user'); // 'user' default
@@ -75,6 +75,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               emailRedirectTo: null,
               data: {
                 full_name: fullName,
+                phone: phone,
                 role: 'user'
               }
             }
@@ -88,6 +89,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               id: data.user.id,
               email: data.user.email,
               full_name: fullName,
+              phone: phone,
               role: 'user',
               updated_at: new Date().toISOString()
             });
@@ -248,28 +250,53 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           ) : (
             <>
               {isRegister && (
-                <div>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Full Name</label>
-                  <div style={{ position: 'relative' }}>
-                    <User size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Aarav Sharma"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px 10px 40px',
-                        borderRadius: '10px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid var(--border-color)',
-                        color: '#fff',
-                        outline: 'none'
-                      }}
-                    />
+                <>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Full Name</label>
+                    <div style={{ position: 'relative' }}>
+                      <User size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Aarav Sharma"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px 10px 40px',
+                          borderRadius: '10px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid var(--border-color)',
+                          color: '#fff',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Phone Number</label>
+                    <div style={{ position: 'relative' }}>
+                      <Phone size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
+                      <input
+                        type="tel"
+                        required
+                        placeholder="+91 98765 43210"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px 10px 40px',
+                          borderRadius: '10px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid var(--border-color)',
+                          color: '#fff',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               <div>

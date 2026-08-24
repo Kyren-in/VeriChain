@@ -7,6 +7,8 @@ export default function IssuerPortal({ onCredentialIssued }) {
   const [activeSubTab, setActiveSubTab] = useState('issue'); // 'issue' | 'revoke'
   const [formData, setFormData] = useState({
     holderName: '',
+    userEmail: '',
+    userId: '',
     idType: 'Aadhaar / Passport',
     idNumber: '',
     nationality: 'Indian',
@@ -112,6 +114,33 @@ export default function IssuerPortal({ onCredentialIssued }) {
               value={formData.holderName}
               onChange={(e) => setFormData({ ...formData, holderName: e.target.value })}
             />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                Registered User Email (Tagging)
+              </label>
+              <input
+                type="email"
+                placeholder="name@domain.com"
+                className="input-field"
+                value={formData.userEmail}
+                onChange={(e) => setFormData({ ...formData, userEmail: e.target.value })}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                Registered User ID (Optional UUID)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. 550e8400-e29b..."
+                className="input-field"
+                value={formData.userId}
+                onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+              />
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

@@ -95,7 +95,14 @@ export default function HolderWallet({ user }) {
           </div>
           <div>
             <h2 style={{ fontSize: '1.3rem', fontWeight: '700' }}>Holder Digital Identity Wallet</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Self-Sovereign Identity Credentials & Instant Check-in QR Codes</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Self-Sovereign Identity Credentials</p>
+              {user && (
+                <span className="badge-valid" style={{ fontSize: '0.7rem', padding: '2px 8px', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary)' }}>
+                  User ID: {user.id?.substring(0, 8)}... | {user.email}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
