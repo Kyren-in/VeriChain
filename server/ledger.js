@@ -1,10 +1,43 @@
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+
+const LEDGER_FILE = path.join(process.cwd(), 'ledger_store.json');
 
 class BlockchainLedger {
   constructor() {
     this.chain = [this.createGenesisBlock()];
     this.credentials = new Map(); // id -> credentialData
     this.revocations = new Set();  // id
+    this.loadFromDisk();
+  }
+
+  loadFromDisk() {
+    try {
+      if (fs.existsSync(LEDGER_FILE)) {
+        const raw = fs.readFileSync(LEDGER_FILE, 'utf-8');
+        const data = JSON.parse(raw);
+        if (data.chain && data.chain.length > 0) this.chain = data.chain;
+        if (data.credentials) this.credentials = new Map(data.credentials);
+        if (data.revocations) this.revocations = new Set(data.revocations);
+        console.log(`[Ledger] Loaded ${this.chain.length} blocks and ${this.credentials.size} credentials from disk.`);
+      }
+    } catch (err) {
+      console.error('[Ledger] Failed loading from disk:', err);
+    }
+  }
+
+  saveToDisk() {
+    try {
+      const data = {
+        chain: this.chain,
+        credentials: Array.from(this.credentials.entries()),
+        revocations: Array.from(this.revocations)
+      };
+      fs.writeFileSync(LEDGER_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (err) {
+      console.error('[Ledger] Failed saving to disk:', err);
+    }
   }
 
   createGenesisBlock() {
@@ -81,6 +114,7 @@ class BlockchainLedger {
     );
 
     this.chain.push(newBlock);
+    this.saveToDisk();
 
     return {
       credential: fullCredentialPayload,
@@ -120,6 +154,7 @@ class BlockchainLedger {
     );
 
     this.chain.push(newBlock);
+    this.saveToDisk();
 
     return newBlock;
   }
