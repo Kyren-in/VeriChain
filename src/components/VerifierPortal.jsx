@@ -238,15 +238,7 @@ export default function VerifierPortal() {
               </div>
             </div>
 
-            {/* Test Revoke Trigger */}
-            {verificationResult.status === 'VALID' && (
-              <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Issuer Demo Controls:</span>
-                <button onClick={handleRevokeFromVerifier} className="btn-danger" disabled={revoking}>
-                  <Ban size={14} /> {revoking ? 'Revoking On-Chain...' : 'Simulate Revocation'}
-                </button>
-              </div>
-            )}
+
           </div>
         ) : (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dim)', textAlign: 'center', padding: '40px 20px' }}>
