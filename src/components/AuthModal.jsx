@@ -235,25 +235,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           )}
 
           {isRegister && (
-            <div>
-              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Select Role</label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: '10px',
-                  background: 'rgba(20, 27, 45, 0.95)',
-                  border: '1px solid var(--border-color)',
-                  color: '#fff',
-                  outline: 'none'
-                }}
-              >
-                <option value="user">User (Identity Holder)</option>
-                <option value="issuer">Issuer (Govt / Authority)</option>
-                <option value="verifier">Verifier (Hotel / Checkpoint)</option>
-              </select>
+            <div style={{ padding: '8px 12px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Registration defaults to Standard Identity Holder role. Advanced roles (Issuer / Verifier) can be granted by the System Administrator after detail verification.
             </div>
           )}
 

@@ -3,13 +3,16 @@ import IssuerPortal from './components/IssuerPortal';
 import HolderWallet from './components/HolderWallet';
 import VerifierPortal from './components/VerifierPortal';
 import BlockchainExplorer from './components/BlockchainExplorer';
+import AdminPortal from './components/AdminPortal';
 import AuthModal from './components/AuthModal';
 import { supabase } from './lib/supabaseClient';
-import { Shield, UserCheck, Wallet, Scan, Blocks, Lock, LogIn, LogOut, User, Menu, X } from 'lucide-react';
+import { Shield, UserCheck, Wallet, Scan, Blocks, Lock, LogIn, LogOut, User, Menu, X, ShieldAlert } from 'lucide-react';
+
+const ADMIN_EMAIL = 'jyotirmay_das@outlook.com';
 
 export default function App() {
   const [session, setSession] = useState(null);
-  const [userRole, setUserRole] = useState('guest'); // 'guest' | 'user' | 'issuer' | 'verifier'
+  const [userRole, setUserRole] = useState('guest'); // 'guest' | 'user' | 'issuer' | 'verifier' | 'admin'
   const [activeTab, setActiveTab] = useState('explorer');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -18,10 +21,12 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        const role = session.user.user_metadata?.role || 'user';
+        const isAdmin = session.user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        const role = isAdmin ? 'admin' : (session.user.user_metadata?.role || 'user');
         setUserRole(role);
         // Default tab according to role
-        if (role === 'issuer') setActiveTab('issuer');
+        if (role === 'admin') setActiveTab('admin');
+        else if (role === 'issuer') setActiveTab('issuer');
         else if (role === 'verifier') setActiveTab('verifier');
         else setActiveTab('wallet');
       }
@@ -30,9 +35,11 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session?.user) {
-        const role = session.user.user_metadata?.role || 'user';
+        const isAdmin = session.user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        const role = isAdmin ? 'admin' : (session.user.user_metadata?.role || 'user');
         setUserRole(role);
-        if (role === 'issuer') setActiveTab('issuer');
+        if (role === 'admin') setActiveTab('admin');
+        else if (role === 'issuer') setActiveTab('issuer');
         else if (role === 'verifier') setActiveTab('verifier');
         else setActiveTab('wallet');
       } else {
@@ -92,6 +99,16 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {/* Desktop Navigation Tabs */}
             <nav className="desktop-nav" style={{ display: 'flex', background: 'rgba(18, 24, 38, 0.8)', padding: '6px', borderRadius: '12px', border: '1px solid var(--border-color)', gap: '4px' }}>
+              {userRole === 'admin' && (
+                <button
+                  onClick={() => setActiveTab('admin')}
+                  className={activeTab === 'admin' ? 'btn-primary' : 'btn-secondary'}
+                  style={{ border: 'none', boxShadow: activeTab === 'admin' ? undefined : 'none', color: 'var(--accent-pink)' }}
+                >
+                  <ShieldAlert size={18} /> Admin Panel
+                </button>
+              )}
+
               {(userRole === 'issuer' || userRole === 'admin') && (
                 <button
                   onClick={() => setActiveTab('issuer')}
@@ -171,6 +188,11 @@ export default function App() {
               gap: '8px'
             }}
           >
+            {userRole === 'admin' && (
+              <button onClick={() => { setActiveTab('admin'); setIsMobileMenuOpen(false); }} className={activeTab === 'admin' ? 'btn-primary' : 'btn-secondary'} style={{ width: '100%', justifyContent: 'flex-start' }}>
+                <ShieldAlert size={18} /> Admin Panel
+              </button>
+            )}
             {(userRole === 'issuer' || userRole === 'admin') && (
               <button onClick={() => { setActiveTab('issuer'); setIsMobileMenuOpen(false); }} className={activeTab === 'issuer' ? 'btn-primary' : 'btn-secondary'} style={{ width: '100%', justifyContent: 'flex-start' }}>
                 <UserCheck size={18} /> Issuer Portal
@@ -195,6 +217,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '32px 24px' }}>
+        {activeTab === 'admin' && userRole === 'admin' && <AdminPortal />}
         {activeTab === 'issuer' && (userRole === 'issuer' || userRole === 'admin') && <IssuerPortal onCredentialIssued={() => {}} />}
         {activeTab === 'wallet' && (userRole === 'user' || userRole === 'admin') && <HolderWallet />}
         {activeTab === 'verifier' && (userRole === 'verifier' || userRole === 'admin') && <VerifierPortal />}
