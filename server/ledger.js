@@ -2,7 +2,8 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
-const LEDGER_FILE = path.join(process.cwd(), 'ledger_store.json');
+const dataDir = fs.existsSync('/var/data') ? '/var/data' : process.cwd();
+const LEDGER_FILE = path.join(dataDir, 'ledger_store.json');
 
 class BlockchainLedger {
   constructor() {
