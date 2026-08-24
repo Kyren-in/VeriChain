@@ -6,10 +6,12 @@ import { API_BASE_URL } from '../api';
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [isRegister, setIsRegister] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [step, setStep] = useState(1); // 1: input details, 2: enter OTP
+  const [otpInput, setOtpInput] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState('user'); // 'user' | 'issuer' | 'verifier'
+  const [role, setRole] = useState('user'); // 'user' default
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -37,32 +39,55 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         if (error) throw error;
         setMessage('Password reset link sent to your email address!');
       } else if (isRegister) {
-        // Sign Up with Supabase & user metadata
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-              role: role
-            }
+        if (step === 1) {
+          // Send Brevo OTP code to user's email
+          const res = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, fullName, password })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || 'Failed to send OTP email.');
           }
-        });
 
-        if (error) throw error;
+          setStep(2);
+          setMessage('An OTP code has been sent to your email! Please enter it below to verify.');
+        } else if (step === 2) {
+          // Verify OTP entered by user
+          const verifyRes = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp: otpInput })
+          });
+          const verifyData = await verifyRes.json();
 
-        // Send Brevo welcome & email verification trigger
-        await fetch(`${API_BASE_URL}/api/auth/send-verification`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, fullName, role })
-        }).catch(() => {});
+          if (!verifyRes.ok || !verifyData.success) {
+            throw new Error(verifyData.error || 'Invalid OTP code.');
+          }
 
-        setMessage('Account created! Please check your email to verify your account.');
-        setTimeout(() => {
-          onAuthSuccess(data.user);
-          onClose();
-        }, 2000);
+          // OTP verified -> create account in Supabase
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: fullName,
+                role: 'user'
+              }
+            }
+          });
+
+          if (error) throw error;
+
+          setMessage('Account verified and created successfully!');
+          setTimeout(() => {
+            onAuthSuccess(data.user);
+            onClose();
+            setStep(1);
+            setOtpInput('');
+          }, 1500);
+        }
       } else {
         // Sign In
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -161,83 +186,114 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         )}
 
         <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {isRegister && (
+          {isRegister && step === 2 ? (
             <div>
-              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Full Name</label>
+              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Enter 6-Digit Email OTP</label>
               <div style={{ position: 'relative' }}>
-                <User size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
+                <UserCheck size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--primary)' }} />
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Aarav Sharma"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  maxLength={6}
+                  placeholder="e.g. 849201"
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value)}
                   style={{
                     width: '100%',
                     padding: '10px 12px 10px 40px',
                     borderRadius: '10px',
                     background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid var(--border-color)',
+                    border: '1px solid var(--primary)',
                     color: '#fff',
+                    letterSpacing: '4px',
+                    fontSize: '1.1rem',
                     outline: 'none'
                   }}
                 />
               </div>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.75rem', cursor: 'pointer', marginTop: '8px' }}
+              >
+                ← Back to Edit Email
+              </button>
             </div>
-          )}
+          ) : (
+            <>
+              {isRegister && (
+                <div>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Full Name</label>
+                  <div style={{ position: 'relative' }}>
+                    <User size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Aarav Sharma"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px 10px 40px',
+                        borderRadius: '10px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid var(--border-color)',
+                        color: '#fff',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
-          <div>
-            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Email Address</label>
-            <div style={{ position: 'relative' }}>
-              <Mail size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
-              <input
-                type="email"
-                required
-                placeholder="name@domain.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px 10px 40px',
-                  borderRadius: '10px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border-color)',
-                  color: '#fff',
-                  outline: 'none'
-                }}
-              />
-            </div>
-          </div>
-
-          {!isForgotPassword && (
-            <div>
-              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Password</label>
-              <div style={{ position: 'relative' }}>
-                <Lock size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px 10px 40px',
-                    borderRadius: '10px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid var(--border-color)',
-                    color: '#fff',
-                    outline: 'none'
-                  }}
-                />
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Email Address</label>
+                <div style={{ position: 'relative' }}>
+                  <Mail size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
+                  <input
+                    type="email"
+                    required
+                    placeholder="name@domain.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px 10px 40px',
+                      borderRadius: '10px',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid var(--border-color)',
+                      color: '#fff',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          )}
 
-          {isRegister && (
-            <div style={{ padding: '8px 12px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Registration defaults to Standard Identity Holder role. Advanced roles (Issuer / Verifier) can be granted by the System Administrator after detail verification.
-            </div>
+              {!isForgotPassword && (
+                <div>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Password</label>
+                  <div style={{ position: 'relative' }}>
+                    <Lock size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px 10px 40px',
+                        borderRadius: '10px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid var(--border-color)',
+                        color: '#fff',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           <button
@@ -246,7 +302,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             className="btn-primary"
             style={{ width: '100%', marginTop: '8px', padding: '12px', justifyContent: 'center' }}
           >
-            {loading ? 'Processing...' : isForgotPassword ? 'Send Reset Link' : isRegister ? 'Register Account' : 'Sign In'}
+            {loading ? 'Processing...' : isForgotPassword ? 'Send Reset Link' : isRegister ? (step === 2 ? 'Verify OTP & Create Account' : 'Send Verification OTP') : 'Sign In'}
           </button>
         </form>
 

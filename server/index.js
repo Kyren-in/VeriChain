@@ -16,22 +16,56 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(distPath));
 
-// Auth & Brevo Email Routes
-app.post('/api/auth/send-verification', async (req, res) => {
-  const { email, fullName, role } = req.body;
+const otpStore = new Map(); // email -> { otp, expiresAt, pendingUser }
+
+// Auth & Brevo OTP Email Routes
+app.post('/api/auth/send-otp', async (req, res) => {
+  const { email, fullName, password } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required.' });
+
+  const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+  otpStore.set(email.toLowerCase(), { otp: generatedOtp, expiresAt, pendingUser: { email, fullName, password } });
+
   const result = await sendEmail({
     to: email,
-    subject: 'Welcome to VeriChain - Please Verify Your Account',
+    subject: 'VeriChain - Your Registration Verification OTP',
     htmlContent: `
-      <div style="font-family: Arial, sans-serif; padding: 20px; color: #111;">
-        <h2>Welcome to VeriChain, ${fullName || 'User'}!</h2>
-        <p>Thank you for registering your account as <strong>${role?.toUpperCase()}</strong>.</p>
-        <p>Please click the button below to verify your email address and activate your Decentralized Identity profile.</p>
-        <a href="https://veri-chain-mocha.vercel.app/" style="background: #6366f1; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;">Verify Account</a>
+      <div style="font-family: Arial, sans-serif; padding: 24px; color: #111; background: #f8fafc; border-radius: 12px;">
+        <h2 style="color: #6366f1;">VeriChain Identity Verification</h2>
+        <p>Hello ${fullName || 'User'},</p>
+        <p>Your One-Time Password (OTP) to complete your account registration is:</p>
+        <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #4f46e5; margin: 20px 0; padding: 12px 24px; background: #e0e7ff; display: inline-block; border-radius: 8px;">
+          ${generatedOtp}
+        </div>
+        <p style="color: #64748b; font-size: 14px;">This code is valid for 10 minutes. If you did not request this, please ignore this email.</p>
       </div>
     `
   });
-  res.json(result);
+
+  res.json({ success: true, message: 'OTP sent successfully to your email.', ...result });
+});
+
+app.post('/api/auth/verify-otp', (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required.' });
+
+  const record = otpStore.get(email.toLowerCase());
+  if (!record) return res.status(400).json({ error: 'OTP not found or expired. Please request a new OTP.' });
+
+  if (Date.now() > record.expiresAt) {
+    otpStore.delete(email.toLowerCase());
+    return res.status(400).json({ error: 'OTP has expired. Please request a new code.' });
+  }
+
+  if (record.otp !== otp.trim()) {
+    return res.status(400).json({ error: 'Invalid OTP code. Please check your email and try again.' });
+  }
+
+  // OTP match verified!
+  otpStore.delete(email.toLowerCase());
+  res.json({ success: true, message: 'OTP verified successfully!' });
 });
 
 app.post('/api/auth/send-reset-email', async (req, res) => {
