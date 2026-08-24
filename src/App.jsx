@@ -152,9 +152,14 @@ export default function App() {
             {/* Auth Action Button */}
             {session ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span className="badge-valid" style={{ textTransform: 'uppercase', fontSize: '0.7rem' }}>
-                  <User size={12} style={{ marginRight: '4px' }} /> {userRole}
-                </span>
+                <button
+                  onClick={() => setActiveTab('wallet')}
+                  className="badge-valid"
+                  style={{ textTransform: 'uppercase', fontSize: '0.7rem', cursor: 'pointer', border: '1px solid var(--primary)', background: 'rgba(99, 102, 241, 0.15)', color: '#fff', padding: '6px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center' }}
+                  title="Click to view Account & Security Options"
+                >
+                  <User size={14} style={{ marginRight: '4px', color: 'var(--primary)' }} /> {userRole} Profile
+                </button>
                 <button onClick={handleSignOut} className="btn-secondary" style={{ padding: '8px 14px' }}>
                   <LogOut size={16} /> Sign Out
                 </button>
