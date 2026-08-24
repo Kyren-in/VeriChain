@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { API_BASE_URL } from '../api';
 import { Shield, Mail, Lock, User, UserCheck, X, Phone } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
