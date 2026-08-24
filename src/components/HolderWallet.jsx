@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { Wallet, QrCode, Shield, CheckCircle, RefreshCw, X, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 
+import { API_BASE_URL } from '../api';
+
 export default function HolderWallet() {
   const [credentials, setCredentials] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +14,7 @@ export default function HolderWallet() {
   const fetchCredentials = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/credentials');
+      const res = await fetch(`${API_BASE_URL}/api/credentials`);
       const data = await res.json();
       setCredentials(data);
     } catch (err) {

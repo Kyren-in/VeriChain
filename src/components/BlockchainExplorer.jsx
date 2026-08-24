@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Blocks, RefreshCw, ExternalLink, Hash, Clock, FileText } from 'lucide-react';
 
+import { API_BASE_URL } from '../api';
+
 export default function BlockchainExplorer() {
   const [blocks, setBlocks] = useState([]);
   const [chainLength, setChainLength] = useState(0);
@@ -9,7 +11,7 @@ export default function BlockchainExplorer() {
   const fetchBlocks = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/blocks');
+      const res = await fetch(`${API_BASE_URL}/api/blocks`);
       const data = await res.json();
       setBlocks(data.blocks);
       setChainLength(data.chainLength);

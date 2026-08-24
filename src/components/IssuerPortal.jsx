@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { UserCheck, ShieldCheck, Hash, Sparkles, Calendar, Globe, CreditCard } from 'lucide-react';
 
+import { API_BASE_URL } from '../api';
+
 export default function IssuerPortal({ onCredentialIssued }) {
   const [formData, setFormData] = useState({
     holderName: '',
@@ -20,7 +22,7 @@ export default function IssuerPortal({ onCredentialIssued }) {
     setLastIssued(null);
 
     try {
-      const res = await fetch('/api/credentials/issue', {
+      const res = await fetch(`${API_BASE_URL}/api/credentials/issue`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

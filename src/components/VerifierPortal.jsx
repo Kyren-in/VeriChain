@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Scan, ShieldCheck, ShieldAlert, AlertOctagon, RotateCcw, Ban, CheckCircle2, FileJson, Edit3 } from 'lucide-react';
 
+import { API_BASE_URL } from '../api';
+
 export default function VerifierPortal() {
   const [inputPayload, setInputPayload] = useState('');
   const [verificationResult, setVerificationResult] = useState(null);
@@ -10,7 +12,7 @@ export default function VerifierPortal() {
   // Quick preset sample payloads to make demoing smooth & instant
   const loadPreset = async (type) => {
     try {
-      const res = await fetch('/api/credentials');
+      const res = await fetch(`${API_BASE_URL}/api/credentials`);
       const allCreds = await res.json();
       
       const aaravCred = allCreds.find(c => c.id === 'VC-2026-88492');
@@ -45,7 +47,7 @@ export default function VerifierPortal() {
 
     try {
       let parsed = JSON.parse(inputPayload);
-      const res = await fetch('/api/credentials/verify', {
+      const res = await fetch(`${API_BASE_URL}/api/credentials/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(parsed)
@@ -64,7 +66,7 @@ export default function VerifierPortal() {
     try {
       const parsed = JSON.parse(inputPayload);
       setRevoking(true);
-      const res = await fetch('/api/credentials/revoke', {
+      const res = await fetch(`${API_BASE_URL}/api/credentials/revoke`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: parsed.id, reason: 'Revoked by Checkpoint Officer / Front Desk' })
