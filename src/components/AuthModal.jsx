@@ -84,13 +84,14 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
           // Insert into Supabase 'profiles' table so user shows up in database queries
           if (data.user) {
-            await supabase.from('profiles').upsert({
+            const { error: profileErr } = await supabase.from('profiles').upsert({
               id: data.user.id,
               email: data.user.email,
               full_name: fullName,
               role: 'user',
               updated_at: new Date().toISOString()
-            }).catch(() => {});
+            });
+            if (profileErr) console.error('Profile upsert error:', profileErr);
           }
 
           setMessage('Account verified and created successfully!');
@@ -109,6 +110,18 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         });
 
         if (error) throw error;
+
+        // Sync profile on login if missing
+        if (data.user) {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            email: data.user.email,
+            full_name: data.user.user_metadata?.full_name || '',
+            role: data.user.user_metadata?.role || 'user',
+            updated_at: new Date().toISOString()
+          }).catch(() => {});
+        }
+
         onAuthSuccess(data.user);
         onClose();
       }
