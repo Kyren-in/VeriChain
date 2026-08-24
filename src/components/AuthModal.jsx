@@ -67,10 +67,12 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           }
 
           // OTP verified -> create account in Supabase
+          // Since Brevo OTP is already verified above, bypass Supabase confirmation email rate limiter
           const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
+              emailRedirectTo: null,
               data: {
                 full_name: fullName,
                 role: 'user'
