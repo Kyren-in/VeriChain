@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import { Wallet, QrCode, Shield, CheckCircle, RefreshCw, X, AlertTriangle, Eye, EyeOff, KeyRound, Trash2, Settings } from 'lucide-react';
+import { Wallet, QrCode, Shield, ShieldAlert, CheckCircle, RefreshCw, X, AlertTriangle, Eye, EyeOff, KeyRound, Trash2, Settings } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { API_BASE_URL } from '../api';
 
-export default function HolderWallet() {
+export default function HolderWallet({ user }) {
   const [credentials, setCredentials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCred, setSelectedCred] = useState(null);
@@ -38,8 +38,19 @@ export default function HolderWallet() {
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/credentials`);
-      const data = await res.json();
-      setCredentials(data);
+      const allCreds = await res.json();
+      
+      // Strict user privacy filter: Match credential holderName or DID with current user metadata
+      const userName = user?.user_metadata?.full_name?.toLowerCase() || '';
+      const userEmail = user?.email?.toLowerCase() || '';
+
+      const myCredentials = allCreds.filter(cred => {
+        if (!userName && !userEmail) return false;
+        const credHolder = (cred.holderName || '').toLowerCase();
+        return (userName && credHolder.includes(userName)) || (userName && userName.includes(credHolder));
+      });
+
+      setCredentials(myCredentials);
     } catch (err) {
       console.error('Error fetching wallet credentials:', err);
     } finally {
@@ -174,8 +185,12 @@ export default function HolderWallet() {
       {loading ? (
         <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-dim)' }}>Loading tourist wallet credentials...</div>
       ) : credentials.length === 0 ? (
-        <div className="glass-panel" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
-          No digital credentials found. Use the Issuer Portal to create a new tourist ID.
+        <div className="glass-panel" style={{ padding: '60px', textAlign: 'center', color: 'var(--accent-amber)' }}>
+          <ShieldAlert size={36} style={{ marginBottom: '12px' }} />
+          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#fff', marginBottom: '6px' }}>DID Not Issued by Authority</h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            Your account is verified, but an official Verifiable Credential has not been issued to <strong>{user?.user_metadata?.full_name || user?.email}</strong> yet.
+          </p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
