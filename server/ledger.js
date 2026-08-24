@@ -1,16 +1,52 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 
-const dataDir = fs.existsSync('/var/data') ? '/var/data' : process.cwd();
-const LEDGER_FILE = path.join(dataDir, 'ledger_store.json');
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://dgsljqltsotzaeeqvidw.supabase.co';
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnc2xqcWx0c290emFlZXF2aWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1OTQwNjYsImV4cCI6MjEwMzE3MDA2Nn0.iZzfoEsUOzFYhvu14Ljd6yvGGAgHkJdIBQe06O3VslY';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const LEDGER_FILE = path.join(process.cwd(), 'ledger_store.json');
 
 class BlockchainLedger {
   constructor() {
     this.chain = [this.createGenesisBlock()];
     this.credentials = new Map(); // id -> credentialData
     this.revocations = new Set();  // id
-    this.loadFromDisk();
+    this.loadFromSupabase();
+  }
+
+  async loadFromSupabase() {
+    try {
+      // 1. Fetch blocks from Supabase 'blocks' table
+      const { data: dbBlocks } = await supabase.from('blocks').select('*').order('index', { ascending: true });
+      if (dbBlocks && dbBlocks.length > 0) {
+        this.chain = dbBlocks.map(b => ({
+          index: b.index,
+          timestamp: b.timestamp,
+          action: b.action,
+          credentialId: b.credential_id,
+          credentialHash: b.credential_hash,
+          did: b.did,
+          previousHash: b.previous_hash,
+          hash: b.hash
+        }));
+      }
+
+      // 2. Fetch credentials from Supabase 'issued_credentials' table
+      const { data: dbCreds } = await supabase.from('issued_credentials').select('*');
+      if (dbCreds && dbCreds.length > 0) {
+        dbCreds.forEach(c => {
+          this.credentials.set(c.id, c.payload);
+          if (c.is_revoked) this.revocations.add(c.id);
+        });
+      }
+      console.log(`[Supabase Ledger] Loaded ${this.chain.length} blocks and ${this.credentials.size} credentials.`);
+    } catch (err) {
+      console.error('[Supabase Ledger] Fallback to disk load:', err);
+      this.loadFromDisk();
+    }
   }
 
   loadFromDisk() {
@@ -21,23 +57,41 @@ class BlockchainLedger {
         if (data.chain && data.chain.length > 0) this.chain = data.chain;
         if (data.credentials) this.credentials = new Map(data.credentials);
         if (data.revocations) this.revocations = new Set(data.revocations);
-        console.log(`[Ledger] Loaded ${this.chain.length} blocks and ${this.credentials.size} credentials from disk.`);
       }
     } catch (err) {
-      console.error('[Ledger] Failed loading from disk:', err);
+      console.error('[Ledger Disk] Error loading disk file:', err);
     }
   }
 
-  saveToDisk() {
+  async saveBlockToSupabase(block, credentialPayload = null) {
     try {
-      const data = {
-        chain: this.chain,
-        credentials: Array.from(this.credentials.entries()),
-        revocations: Array.from(this.revocations)
-      };
-      fs.writeFileSync(LEDGER_FILE, JSON.stringify(data, null, 2), 'utf-8');
+      // Upsert block record into Supabase
+      await supabase.from('blocks').upsert({
+        index: block.index,
+        timestamp: block.timestamp,
+        action: block.action,
+        credential_id: block.credentialId || null,
+        credential_hash: block.credentialHash || null,
+        did: block.did || null,
+        previous_hash: block.previousHash,
+        hash: block.hash
+      });
+
+      // Upsert credential payload if issuing
+      if (credentialPayload) {
+        await supabase.from('issued_credentials').upsert({
+          id: credentialPayload.id,
+          did: credentialPayload.did,
+          holder_name: credentialPayload.holderName,
+          user_email: credentialPayload.userEmail || null,
+          user_id: credentialPayload.userId || null,
+          payload: credentialPayload,
+          is_revoked: false,
+          updated_at: new Date().toISOString()
+        });
+      }
     } catch (err) {
-      console.error('[Ledger] Failed saving to disk:', err);
+      console.error('[Supabase Ledger Save Error]:', err);
     }
   }
 
@@ -115,7 +169,7 @@ class BlockchainLedger {
     );
 
     this.chain.push(newBlock);
-    this.saveToDisk();
+    this.saveBlockToSupabase(newBlock, fullCredentialPayload);
 
     return {
       credential: fullCredentialPayload,
@@ -155,7 +209,14 @@ class BlockchainLedger {
     );
 
     this.chain.push(newBlock);
-    this.saveToDisk();
+    this.saveBlockToSupabase(newBlock);
+    
+    // Update revoked status in Supabase
+    supabase.from('issued_credentials')
+      .update({ is_revoked: true, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .then(() => {})
+      .catch(() => {});
 
     return newBlock;
   }
