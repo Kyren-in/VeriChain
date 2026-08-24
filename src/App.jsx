@@ -224,7 +224,7 @@ export default function App() {
       <main style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '32px 24px' }}>
         {activeTab === 'admin' && userRole === 'admin' && <AdminPortal />}
         {activeTab === 'issuer' && (userRole === 'issuer' || userRole === 'admin') && <IssuerPortal onCredentialIssued={() => {}} />}
-        {activeTab === 'wallet' && (userRole === 'user' || userRole === 'admin') && <HolderWallet user={session?.user} />}
+        {activeTab === 'wallet' && session && <HolderWallet user={session?.user} />}
         {activeTab === 'verifier' && (userRole === 'verifier' || userRole === 'admin') && <VerifierPortal />}
         {activeTab === 'explorer' && <BlockchainExplorer />}
       </main>
