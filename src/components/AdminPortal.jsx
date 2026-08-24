@@ -14,15 +14,10 @@ export default function AdminPortal() {
     try {
       // Fetch users from Supabase or memory store
       const { data, error } = await supabase.from('profiles').select('*');
-      if (error || !data) {
-        // Mock default demo list if database table is empty or initializing
-        setUsersList([
-          { id: '1', email: 'jyotiprakashpanda072@gmail.com', full_name: 'Jyotiprakash Panda', role: 'user', created_at: '2026-08-24' },
-          { id: '2', email: 'aarav.sharma@gov.in', full_name: 'Aarav Sharma', role: 'user', created_at: '2026-08-24' },
-          { id: '3', email: 'elena.rostova@tourism.org', full_name: 'Elena Rostova', role: 'user', created_at: '2026-08-24' }
-        ]);
-      } else {
+      if (data) {
         setUsersList(data);
+      } else {
+        setUsersList([]);
       }
     } catch (err) {
       console.error('Error fetching users:', err);

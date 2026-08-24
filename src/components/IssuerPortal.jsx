@@ -14,7 +14,7 @@ export default function IssuerPortal({ onCredentialIssued }) {
     holderName: '',
     userEmail: '',
     userId: '',
-    idType: 'Aadhaar / Passport',
+    idType: 'Aadhaar Card',
     idNumber: '',
     nationality: 'Indian',
     validUntil: '2027-12-31',
@@ -248,8 +248,9 @@ export default function IssuerPortal({ onCredentialIssued }) {
                 value={formData.idType}
                 onChange={(e) => setFormData({ ...formData, idType: e.target.value })}
               >
-                <option value="Aadhaar / Passport">Aadhaar / Passport</option>
-                <option value="Foreign Passport">Foreign Passport</option>
+                <option value="Aadhaar Card">Aadhaar Card</option>
+                <option value="Passport">Passport</option>
+                <option value="PAN Card">PAN Card</option>
                 <option value="Driver License">Driver License</option>
                 <option value="Voter ID">Voter ID</option>
               </select>

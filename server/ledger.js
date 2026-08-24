@@ -211,23 +211,3 @@ class BlockchainLedger {
 
 export const ledger = new BlockchainLedger();
 
-// Seed initial sample tourist credential for quick instant testing demo
-ledger.issueCredential({
-  id: 'VC-2026-88492',
-  holderName: 'Aarav Sharma',
-  idType: 'Aadhaar / Passport',
-  idNumber: 'IND-9874-3210-55',
-  nationality: 'Indian',
-  validUntil: '2027-12-31',
-  issuer: 'Incredible India Tourism Board'
-});
-
-ledger.issueCredential({
-  id: 'VC-2026-11930',
-  holderName: 'Elena Rostova',
-  idType: 'Foreign Passport',
-  idNumber: 'PASSPORT-RU-440219',
-  nationality: 'Russian',
-  validUntil: '2026-10-15',
-  issuer: 'Goa State Tourism Department'
-});
