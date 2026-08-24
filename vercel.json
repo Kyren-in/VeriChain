@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "http://localhost:5000/api/$1" }
+    { "source": "/api/(.*)", "destination": "https://verichain-0lke.onrender.com/api/$1" }
   ]
 }
 
