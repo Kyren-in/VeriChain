@@ -80,6 +80,17 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
           if (error) throw error;
 
+          // Insert into Supabase 'profiles' table so user shows up in database queries
+          if (data.user) {
+            await supabase.from('profiles').upsert({
+              id: data.user.id,
+              email: data.user.email,
+              full_name: fullName,
+              role: 'user',
+              updated_at: new Date().toISOString()
+            }).catch(() => {});
+          }
+
           setMessage('Account verified and created successfully!');
           setTimeout(() => {
             onAuthSuccess(data.user);
