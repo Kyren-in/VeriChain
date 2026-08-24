@@ -16,25 +16,19 @@ export default function VerifierPortal() {
       const res = await fetch(`${API_BASE_URL}/api/credentials`);
       const allCreds = await res.json();
       
-      const aaravCred = allCreds.find(c => c.id === 'VC-2026-88492');
-      const elenaCred = allCreds.find(c => c.id === 'VC-2026-11930');
+      const validSample = allCreds.find(c => !c.isRevoked) || allCreds[0];
+      const revokedSample = allCreds.find(c => c.isRevoked) || allCreds[0];
 
-      if (type === 'valid') {
-        if (aaravCred) {
-          const { isRevoked, hash, ...cleanCred } = aaravCred;
-          setInputPayload(JSON.stringify(cleanCred, null, 2));
-        }
-      } else if (type === 'tampered') {
-        if (aaravCred) {
-          const { isRevoked, hash, ...cleanCred } = aaravCred;
-          cleanCred.holderName = cleanCred.holderName + ' (Tampered Name)';
-          setInputPayload(JSON.stringify(cleanCred, null, 2));
-        }
-      } else if (type === 'revoked') {
-        if (elenaCred) {
-          const { isRevoked, hash, ...cleanCred } = elenaCred;
-          setInputPayload(JSON.stringify(cleanCred, null, 2));
-        }
+      if (type === 'valid' && validSample) {
+        const { isRevoked, hash, ...cleanCred } = validSample;
+        setInputPayload(JSON.stringify(cleanCred, null, 2));
+      } else if (type === 'tampered' && validSample) {
+        const { isRevoked, hash, ...cleanCred } = validSample;
+        const tamperedCred = { ...cleanCred, holderName: cleanCred.holderName + ' (Tampered Name)' };
+        setInputPayload(JSON.stringify(tamperedCred, null, 2));
+      } else if (type === 'revoked' && revokedSample) {
+        const { isRevoked, hash, ...cleanCred } = revokedSample;
+        setInputPayload(JSON.stringify(cleanCred, null, 2));
       }
     } catch (err) {
       console.error('Error loading preset from server:', err);
