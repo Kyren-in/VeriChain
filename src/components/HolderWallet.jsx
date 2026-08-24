@@ -12,7 +12,70 @@ export default function HolderWallet({ user }) {
   const [privacyMode, setPrivacyMode] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
-  const [settingsMsg, setSettingsMsg] = useState('');
+  const [selfRevokeStep, setSelfRevokeStep] = useState(1); // 1: initial, 2: OTP sent
+  const [selfRevokeOtp, setSelfRevokeOtp] = useState('');
+  const [revokeLoading, setRevokeLoading] = useState(false);
+
+  const handleSendRevokeOtp = async () => {
+    if (!user?.email) return;
+    setRevokeLoading(true);
+    setSettingsMsg('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, fullName: user.user_metadata?.full_name || 'User' })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSelfRevokeStep(2);
+        setSettingsMsg('A 6-digit OTP code has been sent to your email to authorize self-revocation.');
+      } else {
+        setSettingsMsg(data.error || 'Failed to send OTP email.');
+      }
+    } catch (err) {
+      setSettingsMsg('Error sending OTP: ' + err.message);
+    } finally {
+      setRevokeLoading(false);
+    }
+  };
+
+  const handleConfirmSelfRevoke = async () => {
+    if (!selfRevokeOtp.trim()) return;
+    setRevokeLoading(true);
+    try {
+      // 1. Verify OTP first
+      const verifyRes = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, otp: selfRevokeOtp })
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok || !verifyData.success) {
+        throw new Error(verifyData.error || 'Invalid OTP code.');
+      }
+
+      // 2. Process self-revocation for user's credentials
+      if (credentials.length > 0) {
+        for (const cred of credentials) {
+          await fetch(`${API_BASE_URL}/api/credentials/revoke`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: cred.id, reason: 'Self-revoked by DID Holder' })
+          });
+        }
+      }
+
+      setSettingsMsg('Your DID Credentials have been self-revoked on-chain!');
+      setSelfRevokeStep(1);
+      setSelfRevokeOtp('');
+      fetchCredentials();
+    } catch (err) {
+      setSettingsMsg(err.message || 'Error processing revocation');
+    } finally {
+      setRevokeLoading(false);
+    }
+  };
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
@@ -149,8 +212,24 @@ export default function HolderWallet({ user }) {
               </div>
             )}
 
+            {/* User Profile Info Card */}
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '14px', borderRadius: '12px', marginBottom: '20px', border: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Name:</span>
+                <strong style={{ color: '#fff' }}>{user?.user_metadata?.full_name || 'Standard User'}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Email:</span>
+                <strong style={{ color: '#fff' }}>{user?.email}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)' }}>User UUID:</span>
+                <span className="mono-text" style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)' }}>{user?.id}</span>
+              </div>
+            </div>
+
             <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reset Password</label>
+              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reset Account Password</label>
               <input
                 type="password"
                 placeholder="Enter new password"
@@ -169,8 +248,61 @@ export default function HolderWallet({ user }) {
               </button>
             </form>
 
-            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-              <label style={{ fontSize: '0.8rem', color: 'var(--accent-pink)', display: 'block', marginBottom: '8px' }}>Danger Zone</label>
+            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <label style={{ fontSize: '0.8rem', color: 'var(--accent-pink)', display: 'block' }}>Danger Zone</label>
+              
+              {/* Self Revoke DID Button & OTP Verification */}
+              {selfRevokeStep === 1 ? (
+                <button
+                  type="button"
+                  onClick={handleSendRevokeOtp}
+                  disabled={revokeLoading}
+                  className="btn-secondary"
+                  style={{ borderColor: 'rgba(245, 158, 11, 0.5)', color: '#fbbf24', width: '100%', justifyContent: 'center' }}
+                >
+                  <ShieldAlert size={16} /> {revokeLoading ? 'Sending OTP...' : 'Self-Revoke My DID Credential'}
+                </button>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '12px' }}>
+                  <label style={{ fontSize: '0.75rem', color: '#fbbf24' }}>Enter 6-Digit Email OTP to Confirm Revocation:</label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="Enter OTP"
+                    value={selfRevokeOtp}
+                    onChange={(e) => setSelfRevokeOtp(e.target.value)}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      background: 'rgba(0,0,0,0.3)',
+                      border: '1px solid #fbbf24',
+                      color: '#fff',
+                      letterSpacing: '3px',
+                      fontSize: '1rem'
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={handleConfirmSelfRevoke}
+                      disabled={revokeLoading}
+                      className="btn-primary"
+                      style={{ flex: 1, padding: '8px', justifyContent: 'center', background: '#d97706' }}
+                    >
+                      {revokeLoading ? 'Revoking...' : 'Confirm Self-Revoke'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelfRevokeStep(1)}
+                      className="btn-secondary"
+                      style={{ padding: '8px' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <button onClick={handleDeleteAccount} className="btn-secondary" style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: 'var(--accent-pink)', width: '100%', justifyContent: 'center' }}>
                 <Trash2 size={16} /> Delete Identity Account
               </button>
