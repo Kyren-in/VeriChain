@@ -222,6 +222,18 @@ class BlockchainLedger {
   }
 
   verifyCredential(credentialPayload) {
+    if (!credentialPayload || !credentialPayload.id) {
+      return {
+        status: 'INVALID',
+        valid: false,
+        message: 'Invalid credential payload structure.',
+        computedHash: '0x0',
+        storedHash: null,
+        isRevoked: false,
+        tampered: true
+      };
+    }
+
     const { id } = credentialPayload;
 
     // Check if ID exists
