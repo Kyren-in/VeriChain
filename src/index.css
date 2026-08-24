@@ -47,7 +47,6 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  word-break: break-word;
 }
 
 /* Scrollbar */
@@ -227,48 +226,58 @@ body {
 
   /* Hide desktop nav tabs, show hamburger */
   .desktop-nav { display: none !important; }
-  .mobile-menu-btn { display: flex !important; }
+  .mobile-menu-btn { display: inline-flex !important; }
 
-  /* Navbar row */
-  header > div { padding: 12px 16px !important; flex-wrap: wrap; gap: 8px; }
-  header h1 { font-size: 1.05rem !important; }
-  header p { display: none; }
+  /* Navbar */
+  .header-container {
+    padding: 12px 16px !important;
+  }
+  .header-subtitle {
+    display: none !important;
+  }
 
   /* Main content area */
-  main { padding: 12px 14px !important; }
+  main {
+    padding: 16px 12px !important;
+  }
 
   /* Glass panels */
-  .glass-panel { padding: 16px !important; border-radius: 12px !important; }
+  .glass-panel {
+    padding: 16px 14px !important;
+    border-radius: 14px !important;
+  }
 
-  /* Collapse ALL CSS grid columns to 1 */
-  div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
-
-  /* Flex rows → stack */
-  div[style*="justify-content: space-between"] { flex-wrap: wrap; gap: 10px; }
+  /* Admin table to card list */
+  .admin-desktop-table {
+    display: none !important;
+  }
+  .admin-mobile-cards {
+    display: flex !important;
+  }
 
   /* Buttons */
   .btn-primary, .btn-secondary {
-    font-size: 0.83rem !important;
-    padding: 9px 13px !important;
+    font-size: 0.82rem !important;
+    padding: 8px 12px !important;
   }
 
   /* Inputs */
-  .input-field { font-size: 0.88rem !important; padding: 10px 12px !important; }
-
-  /* Mono hash text */
-  .mono-text { word-break: break-all; font-size: 0.7rem !important; }
-
-  /* Typography */
-  h2 { font-size: 1.05rem !important; }
-  h3 { font-size: 0.95rem !important; }
-
-  /* Badges */
-  .badge-valid, .badge-revoked, .badge-tampered {
-    font-size: 0.63rem !important;
-    padding: 2px 6px !important;
+  .input-field {
+    font-size: 0.88rem !important;
+    padding: 10px 12px !important;
   }
 
-  /* Modals — slide up from bottom as bottom-sheet */
+  /* Mono hash text */
+  .mono-text {
+    word-break: break-all;
+    font-size: 0.72rem !important;
+  }
+
+  /* Typography */
+  h2 { font-size: 1.1rem !important; }
+  h3 { font-size: 0.95rem !important; }
+
+  /* Modals — Bottom Sheet */
   div[style*="position: fixed"] {
     align-items: flex-end !important;
     padding: 0 !important;
@@ -280,40 +289,50 @@ body {
     border-radius: 20px 20px 0 0 !important;
     max-height: 90vh !important;
     overflow-y: auto !important;
+    padding: 24px 18px !important;
   }
 
   /* Footer */
-  footer > div { flex-direction: column !important; gap: 8px !important; text-align: center !important; }
-
-  /* Verifier portal — center button */
-  .glass-panel div[style*="justify-content: space-between"] { justify-content: flex-start !important; flex-direction: column; align-items: flex-start; }
+  footer > div {
+    flex-direction: column !important;
+    gap: 8px !important;
+    text-align: center !important;
+  }
 }
 
 /* ============================================================
    SMALL PHONES — ≤480px
    ============================================================ */
 @media (max-width: 480px) {
-  main { padding: 10px !important; }
-  .glass-panel { padding: 14px !important; }
-  header h1 { font-size: 0.95rem !important; }
-
-  .btn-primary, .btn-secondary {
-    padding: 8px 12px !important;
-    font-size: 0.78rem !important;
-    gap: 5px !important;
+  .header-badge {
+    display: none !important;
   }
 
-  /* Full-width buttons inside cards */
-  .glass-panel .btn-primary,
-  .glass-panel .btn-secondary {
-    width: 100%;
-    justify-content: center;
+  .signout-text {
+    display: none !important;
   }
 
-  /* QR code smaller */
-  img[alt="Credential QR"] { width: 170px !important; height: 170px !important; }
+  .user-profile-btn {
+    padding: 4px 8px !important;
+    font-size: 0.65rem !important;
+  }
 
-  /* Textarea rows */
-  textarea { font-size: 0.78rem !important; }
+  .signout-btn {
+    padding: 6px 8px !important;
+  }
+
+  h1 {
+    font-size: 1.1rem !important;
+  }
+
+  h2 {
+    font-size: 1.05rem !important;
+  }
+
+  /* QR code responsiveness */
+  img[alt="Credential QR"] {
+    width: 190px !important;
+    height: 190px !important;
+  }
 }
 

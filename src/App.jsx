@@ -70,33 +70,33 @@ export default function App() {
           zIndex: 100
         }}
       >
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="header-container" style={{ maxWidth: '1280px', margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {/* Logo & Branding */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div
               style={{
                 background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
-                padding: '10px',
-                borderRadius: '12px',
+                padding: '8px',
+                borderRadius: '10px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)'
               }}
             >
-              <Shield size={24} color="#ffffff" />
+              <Shield size={22} color="#ffffff" />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h1 style={{ fontSize: '1.4rem', fontWeight: '800', tracking: '-0.5px' }}>VeriChain</h1>
-                <span className="badge-valid" style={{ fontSize: '0.65rem', padding: '2px 8px' }}>EVM TESTNET</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <h1 style={{ fontSize: '1.25rem', fontWeight: '800', letterSpacing: '-0.5px' }}>VeriChain</h1>
+                <span className="badge-valid header-badge" style={{ fontSize: '0.65rem', padding: '2px 6px' }}>EVM</span>
               </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Decentralized Identity (DID) Verification System</p>
+              <p className="header-subtitle" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>DID Verification System</p>
             </div>
           </div>
 
           {/* Navigation & Auth */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {/* Desktop Navigation Tabs */}
             <nav className="desktop-nav" style={{ display: 'flex', background: 'rgba(18, 24, 38, 0.8)', padding: '6px', borderRadius: '12px', border: '1px solid var(--border-color)', gap: '4px' }}>
               {userRole === 'admin' && (
@@ -151,22 +151,24 @@ export default function App() {
 
             {/* Auth Action Button */}
             {session ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button
                   onClick={() => setActiveTab('wallet')}
-                  className="badge-valid"
+                  className="badge-valid user-profile-btn"
                   style={{ textTransform: 'uppercase', fontSize: '0.7rem', cursor: 'pointer', border: '1px solid var(--primary)', background: 'rgba(99, 102, 241, 0.15)', color: '#fff', padding: '6px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center' }}
                   title="Click to view Account & Security Options"
                 >
-                  <User size={14} style={{ marginRight: '4px', color: 'var(--primary)' }} /> {userRole} Profile
+                  <User size={14} style={{ marginRight: '4px', color: 'var(--primary)' }} />
+                  <span className="profile-text">{userRole}</span>
                 </button>
-                <button onClick={handleSignOut} className="btn-secondary" style={{ padding: '8px 14px' }}>
-                  <LogOut size={16} /> Sign Out
+                <button onClick={handleSignOut} className="btn-secondary signout-btn" style={{ padding: '6px 10px', fontSize: '0.8rem' }} title="Sign Out">
+                  <LogOut size={15} />
+                  <span className="signout-text">Sign Out</span>
                 </button>
               </div>
             ) : (
-              <button onClick={() => setIsAuthOpen(true)} className="btn-primary" style={{ padding: '8px 16px' }}>
-                <LogIn size={16} /> Sign In
+              <button onClick={() => setIsAuthOpen(true)} className="btn-primary" style={{ padding: '7px 14px', fontSize: '0.85rem' }}>
+                <LogIn size={15} /> Sign In
               </button>
             )}
 
@@ -174,9 +176,9 @@ export default function App() {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="btn-secondary mobile-menu-btn"
-              style={{ padding: '8px' }}
+              style={{ padding: '8px 10px' }}
             >
-              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
