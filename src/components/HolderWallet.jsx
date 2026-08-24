@@ -65,19 +65,10 @@ export default function HolderWallet({ user }) {
   const openQrModal = async (cred) => {
     setSelectedCred(cred);
     try {
-      // If privacy mode is on, construct payload omitting raw ID document number
-      const sharePayload = privacyMode
-        ? {
-            id: cred.id,
-            did: cred.did,
-            holderName: cred.holderName,
-            nationality: cred.nationality,
-            validUntil: cred.validUntil,
-            issuer: cred.issuer
-          }
-        : cred;
+      // Clean internal DB properties (isRevoked, hash) so QR code payload exactly matches issued schema
+      const { isRevoked, hash, userEmail, userId, ...cleanPayload } = cred;
 
-      const payloadString = JSON.stringify(sharePayload);
+      const payloadString = JSON.stringify(cleanPayload, null, 2);
       const url = await QRCode.toDataURL(payloadString, { width: 300, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
       setQrUrl(url);
     } catch (err) {
