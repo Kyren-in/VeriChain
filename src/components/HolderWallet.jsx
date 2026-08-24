@@ -12,6 +12,7 @@ export default function HolderWallet({ user }) {
   const [privacyMode, setPrivacyMode] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [settingsMsg, setSettingsMsg] = useState('');
   const [selfRevokeStep, setSelfRevokeStep] = useState(1); // 1: initial, 2: OTP sent
   const [selfRevokeOtp, setSelfRevokeOtp] = useState('');
   const [revokeLoading, setRevokeLoading] = useState(false);
