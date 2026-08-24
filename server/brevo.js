@@ -3,7 +3,7 @@ dotenv.config();
 
 export async function sendEmail({ to, subject, htmlContent }) {
   const apiKey = process.env.BREVO_API_KEY;
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'noreply@verichain.org';
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'jyotiprakashpanda072@gmail.com';
 
   if (!apiKey || apiKey === 'your-brevo-api-key') {
     console.log(`[Brevo Email Simulation] To: ${to} | Subject: ${subject}`);
