@@ -115,13 +115,17 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
         // Sync profile on login if missing
         if (data.user) {
-          await supabase.from('profiles').upsert({
-            id: data.user.id,
-            email: data.user.email,
-            full_name: data.user.user_metadata?.full_name || '',
-            role: data.user.user_metadata?.role || 'user',
-            updated_at: new Date().toISOString()
-          }).catch(() => {});
+          try {
+            await supabase.from('profiles').upsert({
+              id: data.user.id,
+              email: data.user.email,
+              full_name: data.user.user_metadata?.full_name || '',
+              role: data.user.user_metadata?.role || 'user',
+              updated_at: new Date().toISOString()
+            });
+          } catch (e) {
+            console.error('Profile sync warning:', e);
+          }
         }
 
         onAuthSuccess(data.user);
