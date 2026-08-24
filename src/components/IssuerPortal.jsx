@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
-import { UserCheck, ShieldCheck, Hash, Sparkles, Calendar, Globe, CreditCard, Ban, Camera } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { UserCheck, ShieldCheck, Hash, Sparkles, Calendar, Globe, CreditCard, Ban, Camera, Search, User } from 'lucide-react';
 import QrScannerModal from './QrScannerModal';
+import { supabase } from '../lib/supabaseClient';
 import { API_BASE_URL } from '../api';
 
 export default function IssuerPortal({ onCredentialIssued }) {
   const [activeSubTab, setActiveSubTab] = useState('issue'); // 'issue' | 'revoke'
+  const [registeredUsers, setRegisteredUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+
   const [formData, setFormData] = useState({
     holderName: '',
     userEmail: '',
@@ -22,6 +27,47 @@ export default function IssuerPortal({ onCredentialIssued }) {
   const [revokeReason, setRevokeReason] = useState('Safety Violation / Fraud Flagged');
   const [revokeStatus, setRevokeStatus] = useState(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  useEffect(() => {
+    // Fetch registered users from Supabase for live autocomplete lookup
+    const fetchRegisteredUsers = async () => {
+      try {
+        const { data } = await supabase.from('profiles').select('*');
+        if (data) setRegisteredUsers(data);
+      } catch (err) {
+        console.error('Error fetching registered users:', err);
+      }
+    };
+    fetchRegisteredUsers();
+  }, []);
+
+  const handleEmailSearchChange = (value) => {
+    setFormData(prev => ({ ...prev, userEmail: value }));
+    if (!value.trim()) {
+      setFilteredUsers([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    const searchLower = value.toLowerCase();
+    const matches = registeredUsers.filter(u => 
+      (u.email && u.email.toLowerCase().includes(searchLower)) ||
+      (u.full_name && u.full_name.toLowerCase().includes(searchLower)) ||
+      (u.id && u.id.toLowerCase().includes(searchLower))
+    );
+    setFilteredUsers(matches);
+    setShowDropdown(true);
+  };
+
+  const selectUserMatch = (user) => {
+    setFormData(prev => ({
+      ...prev,
+      userEmail: user.email,
+      userId: user.id,
+      holderName: user.full_name || prev.holderName
+    }));
+    setShowDropdown(false);
+  };
 
   const handleRevoke = async (e) => {
     e.preventDefault();
@@ -117,28 +163,77 @@ export default function IssuerPortal({ onCredentialIssued }) {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div>
+            <div style={{ position: 'relative' }}>
               <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
-                Registered User Email (Tagging)
+                Search Registered User (Email/Name/ID)
               </label>
-              <input
-                type="email"
-                placeholder="name@domain.com"
-                className="input-field"
-                value={formData.userEmail}
-                onChange={(e) => setFormData({ ...formData, userEmail: e.target.value })}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  placeholder="Type letter/number to search user..."
+                  className="input-field"
+                  value={formData.userEmail}
+                  onChange={(e) => handleEmailSearchChange(e.target.value)}
+                  onFocus={() => formData.userEmail && setShowDropdown(true)}
+                />
+                <Search size={16} style={{ position: 'absolute', right: '12px', top: '12px', color: 'var(--text-dim)' }} />
+              </div>
+
+              {/* Autocomplete Matching Dropdown */}
+              {showDropdown && filteredUsers.length > 0 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    top: '100%',
+                    marginTop: '4px',
+                    background: 'rgba(18, 24, 38, 0.98)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid var(--primary)',
+                    borderRadius: '12px',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    zIndex: 200,
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+                  }}
+                >
+                  {filteredUsers.map((u) => (
+                    <div
+                      key={u.id}
+                      onClick={() => selectUserMatch(u)}
+                      style={{
+                        padding: '10px 14px',
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#fff' }}>
+                        {u.full_name || 'Standard User'}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {u.email} | ID: {u.id?.substring(0, 8)}...
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+
             <div>
               <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
-                Registered User ID (Optional UUID)
+                Tagged User ID (Auto-Filled UUID)
               </label>
               <input
                 type="text"
-                placeholder="e.g. 550e8400-e29b..."
+                readOnly
+                placeholder="Auto-filled when user selected"
                 className="input-field"
                 value={formData.userId}
-                onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+                style={{ background: 'rgba(255,255,255,0.02)', color: 'var(--accent-cyan)' }}
               />
             </div>
           </div>
