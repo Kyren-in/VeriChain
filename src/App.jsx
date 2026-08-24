@@ -18,30 +18,50 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        const isAdmin = session.user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-        const role = isAdmin ? 'admin' : (session.user.user_metadata?.role || 'user');
+    const fetchUserRole = async (user) => {
+      if (!user) {
+        setUserRole('guest');
+        setActiveTab('explorer');
+        return;
+      }
+
+      const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      if (isAdmin) {
+        setUserRole('admin');
+        setActiveTab('admin');
+        return;
+      }
+
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        const role = profile?.role || user.user_metadata?.role || 'user';
         setUserRole(role);
-        // Default tab according to role
         if (role === 'admin') setActiveTab('admin');
         else if (role === 'issuer') setActiveTab('issuer');
         else if (role === 'verifier') setActiveTab('verifier');
         else setActiveTab('wallet');
+      } catch (err) {
+        const fallbackRole = user.user_metadata?.role || 'user';
+        setUserRole(fallbackRole);
+      }
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        fetchUserRole(session.user);
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session?.user) {
-        const isAdmin = session.user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-        const role = isAdmin ? 'admin' : (session.user.user_metadata?.role || 'user');
-        setUserRole(role);
-        if (role === 'admin') setActiveTab('admin');
-        else if (role === 'issuer') setActiveTab('issuer');
-        else if (role === 'verifier') setActiveTab('verifier');
-        else setActiveTab('wallet');
+        fetchUserRole(session.user);
       } else {
         setUserRole('guest');
         setActiveTab('explorer');

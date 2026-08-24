@@ -114,14 +114,20 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
         if (error) throw error;
 
-        // Sync profile on login if missing
+        // Sync profile on login if missing, but preserve assigned database role
         if (data.user) {
           try {
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', data.user.id)
+              .single();
+
             await supabase.from('profiles').upsert({
               id: data.user.id,
               email: data.user.email,
               full_name: data.user.user_metadata?.full_name || '',
-              role: data.user.user_metadata?.role || 'user',
+              role: existingProfile?.role || data.user.user_metadata?.role || 'user',
               updated_at: new Date().toISOString()
             });
           } catch (e) {
