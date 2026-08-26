@@ -198,27 +198,18 @@ export default function App() {
                 </button>
               ) : (
                 <>
-                  {/* Logged in role tabs */}
-                  {(userRole === 'user' || userRole === 'admin') && (
+                  {/* Admin Panel: Admin ONLY */}
+                  {userRole === 'admin' && (
                     <button
-                      onClick={() => setActiveTab('wallet')}
-                      className={activeTab === 'wallet' ? 'btn-primary' : 'btn-ghost'}
-                      style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+                      onClick={() => setActiveTab('admin')}
+                      className={activeTab === 'admin' ? 'btn-primary' : 'btn-ghost'}
+                      style={{ padding: '8px 14px', fontSize: '0.84rem', color: '#F87171' }}
                     >
-                      <Wallet size={16} /> Holder Wallet
+                      <ShieldAlert size={16} /> Admin Panel
                     </button>
                   )}
 
-                  {(userRole === 'verifier' || userRole === 'admin') && (
-                    <button
-                      onClick={() => setActiveTab('verifier')}
-                      className={activeTab === 'verifier' ? 'btn-primary' : 'btn-ghost'}
-                      style={{ padding: '8px 14px', fontSize: '0.84rem' }}
-                    >
-                      <Scan size={16} /> Verifier Terminal
-                    </button>
-                  )}
-
+                  {/* Issuer Portal: Issuer & Admin have permission */}
                   {(userRole === 'issuer' || userRole === 'admin') && (
                     <button
                       onClick={() => setActiveTab('issuer')}
@@ -229,6 +220,29 @@ export default function App() {
                     </button>
                   )}
 
+                  {/* Verifier Terminal: Verifier, Issuer & Admin have permission (USER CANNOT SEE) */}
+                  {(userRole === 'verifier' || userRole === 'issuer' || userRole === 'admin') && (
+                    <button
+                      onClick={() => setActiveTab('verifier')}
+                      className={activeTab === 'verifier' ? 'btn-primary' : 'btn-ghost'}
+                      style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+                    >
+                      <Scan size={16} /> Verifier Terminal
+                    </button>
+                  )}
+
+                  {/* Holder Wallet: User, Issuer & Admin have permission */}
+                  {(userRole === 'user' || userRole === 'issuer' || userRole === 'admin') && (
+                    <button
+                      onClick={() => setActiveTab('wallet')}
+                      className={activeTab === 'wallet' ? 'btn-primary' : 'btn-ghost'}
+                      style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+                    >
+                      <Wallet size={16} /> Holder Wallet
+                    </button>
+                  )}
+
+                  {/* Audit Explorer: Visible to ALL logged-in roles (User, Verifier, Issuer, Admin) */}
                   <button
                     onClick={() => setActiveTab('explorer')}
                     className={activeTab === 'explorer' ? 'btn-primary' : 'btn-ghost'}
@@ -236,16 +250,6 @@ export default function App() {
                   >
                     <Blocks size={16} /> Audit Explorer
                   </button>
-
-                  {userRole === 'admin' && (
-                    <button
-                      onClick={() => setActiveTab('admin')}
-                      className={activeTab === 'admin' ? 'btn-primary' : 'btn-ghost'}
-                      style={{ padding: '8px 14px', fontSize: '0.84rem', color: '#F87171' }}
-                    >
-                      <ShieldAlert size={16} /> Admin Panel
-                    </button>
-                  )}
                 </>
               )}
             </nav>
@@ -288,7 +292,7 @@ export default function App() {
               </button>
             )}
 
-            {/* Mobile Hamburger Toggle: Only shown when logged in or has dropdown navigation */}
+            {/* Mobile Hamburger Toggle */}
             {session && (
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -301,7 +305,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu (Only shown for logged in users) */}
+        {/* Mobile Dropdown Menu */}
         {session && isMobileMenuOpen && (
           <div
             style={{
@@ -313,23 +317,13 @@ export default function App() {
               gap: '8px'
             }}
           >
-            {(userRole === 'user' || userRole === 'admin') && (
+            {userRole === 'admin' && (
               <button 
-                onClick={() => { setActiveTab('wallet'); setIsMobileMenuOpen(false); }} 
-                className={activeTab === 'wallet' ? 'btn-primary' : 'btn-secondary'} 
-                style={{ width: '100%', justifyContent: 'flex-start' }}
+                onClick={() => { setActiveTab('admin'); setIsMobileMenuOpen(false); }} 
+                className={activeTab === 'admin' ? 'btn-primary' : 'btn-secondary'} 
+                style={{ width: '100%', justifyContent: 'flex-start', color: '#F87171' }}
               >
-                <Wallet size={16} /> Holder Wallet
-              </button>
-            )}
-
-            {(userRole === 'verifier' || userRole === 'admin') && (
-              <button 
-                onClick={() => { setActiveTab('verifier'); setIsMobileMenuOpen(false); }} 
-                className={activeTab === 'verifier' ? 'btn-primary' : 'btn-secondary'} 
-                style={{ width: '100%', justifyContent: 'flex-start' }}
-              >
-                <Scan size={16} /> Verifier Terminal
+                <ShieldAlert size={16} /> Admin Panel
               </button>
             )}
 
@@ -343,6 +337,26 @@ export default function App() {
               </button>
             )}
 
+            {(userRole === 'verifier' || userRole === 'issuer' || userRole === 'admin') && (
+              <button 
+                onClick={() => { setActiveTab('verifier'); setIsMobileMenuOpen(false); }} 
+                className={activeTab === 'verifier' ? 'btn-primary' : 'btn-secondary'} 
+                style={{ width: '100%', justifyContent: 'flex-start' }}
+              >
+                <Scan size={16} /> Verifier Terminal
+              </button>
+            )}
+
+            {(userRole === 'user' || userRole === 'issuer' || userRole === 'admin') && (
+              <button 
+                onClick={() => { setActiveTab('wallet'); setIsMobileMenuOpen(false); }} 
+                className={activeTab === 'wallet' ? 'btn-primary' : 'btn-secondary'} 
+                style={{ width: '100%', justifyContent: 'flex-start' }}
+              >
+                <Wallet size={16} /> Holder Wallet
+              </button>
+            )}
+
             <button 
               onClick={() => { setActiveTab('explorer'); setIsMobileMenuOpen(false); }} 
               className={activeTab === 'explorer' ? 'btn-primary' : 'btn-secondary'} 
@@ -350,16 +364,6 @@ export default function App() {
             >
               <Blocks size={16} /> Audit Explorer
             </button>
-
-            {userRole === 'admin' && (
-              <button 
-                onClick={() => { setActiveTab('admin'); setIsMobileMenuOpen(false); }} 
-                className={activeTab === 'admin' ? 'btn-primary' : 'btn-secondary'} 
-                style={{ width: '100%', justifyContent: 'flex-start', color: '#F87171' }}
-              >
-                <ShieldAlert size={16} /> Admin Panel
-              </button>
-            )}
           </div>
         )}
       </header>

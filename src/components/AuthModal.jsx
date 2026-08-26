@@ -106,19 +106,30 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
         if (data.user) {
           try {
+            // Check if profile already exists in Supabase 'profiles' table
             const { data: existingProfile } = await supabase
               .from('profiles')
-              .select('role')
+              .select('id, role')
               .eq('id', data.user.id)
-              .single();
+              .maybeSingle();
 
-            await supabase.from('profiles').upsert({
-              id: data.user.id,
-              email: data.user.email,
-              full_name: data.user.user_metadata?.full_name || '',
-              role: existingProfile?.role || data.user.user_metadata?.role || 'user',
-              updated_at: new Date().toISOString()
-            });
+            if (!existingProfile) {
+              // Only insert default 'user' role if the profile is brand new
+              await supabase.from('profiles').insert({
+                id: data.user.id,
+                email: data.user.email,
+                full_name: data.user.user_metadata?.full_name || '',
+                role: 'user',
+                updated_at: new Date().toISOString()
+              });
+            } else {
+              // Profile already exists: update email/full_name timestamp ONLY, NEVER touch or overwrite role
+              await supabase.from('profiles').update({
+                email: data.user.email,
+                full_name: data.user.user_metadata?.full_name || '',
+                updated_at: new Date().toISOString()
+              }).eq('id', data.user.id);
+            }
           } catch (e) {
             console.error('Profile sync warning:', e);
           }
