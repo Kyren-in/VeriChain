@@ -18,6 +18,21 @@ app.use(express.static(distPath));
 
 const otpStore = new Map(); // email -> { otp, expiresAt, pendingUser }
 
+// Healthcheck / Keep-Alive Endpoint (for UptimeRobot / Cron pings)
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    service: 'VeriChain EVM DID Backend',
+    blocksAnchored: ledger.chain.length
+  });
+});
+
+app.get('/api/ping', (req, res) => {
+  res.send('pong');
+});
+
 // Auth & Brevo OTP Email Routes
 app.post('/api/auth/send-otp', async (req, res) => {
   const { email, fullName, password } = req.body;
