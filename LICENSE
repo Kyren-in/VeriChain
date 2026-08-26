@@ -1,21 +1,22 @@
-MIT License
+PROPRIETARY LICENSE & TERMS OF USE
+===================================
 
-Copyright (c) 2026 Kyren-in
+Copyright (c) 2026 Jyotirmay Das (Kyren-in) & Team. All Rights Reserved.
+Project: VeriChain — Self-Sovereign Digital Identity & Decentralized Credential Platform
+Prepared for: Smart India Hackathon (SIH) 2026
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. GRANT OF RESTRICTED EVALUATION:
+This software, source code, design systems, diagrams, algorithms, and associated documentation are the exclusive intellectual property of Jyotirmay Das (Kyren-in) and Team.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+2. PROHIBITION OF UNAUTHORIZED USE, REPRODUCTION, OR FORKING:
+No individual, organization, academic institution, hackathon competitor, or commercial entity is permitted to:
+(a) Copy, fork, duplicate, distribute, publicly display, or modify this software or any part thereof without prior express written permission from the copyright owner.
+(b) Submit, present, or claim this software or any derivative works in any hackathon, competition, academic submission, or commercial product without authorized attribution and written consent.
+(c) Host, re-deploy, or reverse engineer the proprietary cryptographic ledger or front-end components.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+3. RESERVATION OF RIGHTS:
+All rights not explicitly granted herein are strictly reserved by the copyright holder.
+
+For inquiry or permission requests:
+Contact: Jyotirmay Das (Kyren-in)
+GitHub: https://github.com/Kyren-in
