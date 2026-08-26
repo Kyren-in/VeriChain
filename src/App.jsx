@@ -31,6 +31,7 @@ export default function App() {
       const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
       if (isAdmin) {
         setUserRole('admin');
+        setActiveTab((prev) => (prev === 'landing' ? 'admin' : prev));
         return;
       }
 
@@ -43,9 +44,21 @@ export default function App() {
 
         const role = profile?.role || user.user_metadata?.role || 'user';
         setUserRole(role);
+        setActiveTab((prev) => {
+          if (prev === 'landing') {
+            if (role === 'admin') return 'admin';
+            if (role === 'issuer') return 'issuer';
+            if (role === 'verifier') return 'verifier';
+            return 'wallet';
+          }
+          // If a standard user was on verifier tab, redirect to wallet
+          if (role === 'user' && prev === 'verifier') return 'wallet';
+          return prev;
+        });
       } catch (err) {
         const fallbackRole = user.user_metadata?.role || 'user';
         setUserRole(fallbackRole);
+        setActiveTab((prev) => (prev === 'landing' ? (fallbackRole === 'verifier' ? 'verifier' : fallbackRole === 'issuer' ? 'issuer' : 'wallet') : prev));
       }
     };
 
@@ -62,6 +75,7 @@ export default function App() {
         fetchUserRole(session.user);
       } else {
         setUserRole('guest');
+        setActiveTab('landing');
       }
     });
 
@@ -105,7 +119,13 @@ export default function App() {
         >
           {/* Logo & SIH Identity Branding */}
           <div 
-            onClick={() => setActiveTab('landing')}
+            onClick={() => {
+              if (!session) setActiveTab('landing');
+              else if (userRole === 'admin') setActiveTab('admin');
+              else if (userRole === 'issuer') setActiveTab('issuer');
+              else if (userRole === 'verifier') setActiveTab('verifier');
+              else setActiveTab('wallet');
+            }}
             style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
           >
             <div
@@ -167,21 +187,27 @@ export default function App() {
                 gap: '4px' 
               }}
             >
-              <button
-                onClick={() => setActiveTab('landing')}
-                className={activeTab === 'landing' ? 'btn-saffron' : 'btn-ghost'}
-                style={{ padding: '8px 14px', fontSize: '0.84rem' }}
-              >
-                <Home size={16} /> Home
-              </button>
+              {/* Home button: ONLY visible when logged out (guest) */}
+              {!session && (
+                <button
+                  onClick={() => setActiveTab('landing')}
+                  className={activeTab === 'landing' ? 'btn-saffron' : 'btn-ghost'}
+                  style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+                >
+                  <Home size={16} /> Home
+                </button>
+              )}
 
-              <button
-                onClick={() => setActiveTab('verifier')}
-                className={activeTab === 'verifier' ? 'btn-primary' : 'btn-ghost'}
-                style={{ padding: '8px 14px', fontSize: '0.84rem' }}
-              >
-                <Scan size={16} /> Verifier Terminal
-              </button>
+              {/* Verifier Terminal: Visible to verifiers, admins, and guests (demo), but NOT standard USER role */}
+              {(userRole === 'verifier' || userRole === 'admin' || !session) && (
+                <button
+                  onClick={() => setActiveTab('verifier')}
+                  className={activeTab === 'verifier' ? 'btn-primary' : 'btn-ghost'}
+                  style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+                >
+                  <Scan size={16} /> Verifier Terminal
+                </button>
+              )}
 
               <button
                 onClick={() => setActiveTab('explorer')}
@@ -278,21 +304,25 @@ export default function App() {
               gap: '8px'
             }}
           >
-            <button 
-              onClick={() => { setActiveTab('landing'); setIsMobileMenuOpen(false); }} 
-              className={activeTab === 'landing' ? 'btn-saffron' : 'btn-secondary'} 
-              style={{ width: '100%', justifyContent: 'flex-start' }}
-            >
-              <Home size={16} /> Home Landing
-            </button>
+            {!session && (
+              <button 
+                onClick={() => { setActiveTab('landing'); setIsMobileMenuOpen(false); }} 
+                className={activeTab === 'landing' ? 'btn-saffron' : 'btn-secondary'} 
+                style={{ width: '100%', justifyContent: 'flex-start' }}
+              >
+                <Home size={16} /> Home Landing
+              </button>
+            )}
             
-            <button 
-              onClick={() => { setActiveTab('verifier'); setIsMobileMenuOpen(false); }} 
-              className={activeTab === 'verifier' ? 'btn-primary' : 'btn-secondary'} 
-              style={{ width: '100%', justifyContent: 'flex-start' }}
-            >
-              <Scan size={16} /> Verifier Terminal
-            </button>
+            {(userRole === 'verifier' || userRole === 'admin' || !session) && (
+              <button 
+                onClick={() => { setActiveTab('verifier'); setIsMobileMenuOpen(false); }} 
+                className={activeTab === 'verifier' ? 'btn-primary' : 'btn-secondary'} 
+                style={{ width: '100%', justifyContent: 'flex-start' }}
+              >
+                <Scan size={16} /> Verifier Terminal
+              </button>
+            )}
 
             <button 
               onClick={() => { setActiveTab('explorer'); setIsMobileMenuOpen(false); }} 
