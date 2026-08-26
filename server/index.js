@@ -16,6 +16,40 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(distPath));
 
+// In-memory rate limiting & brute-force protection
+const ipRequestCounts = new Map(); // ip -> { count, resetAt }
+const accountAttempts = new Map(); // email -> { attempts, lockedUntil }
+
+function rateLimiter(req, res, next) {
+  const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown-ip';
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minute window
+  const maxRequests = 30; // 30 requests per minute per IP
+
+  const record = ipRequestCounts.get(ip) || { count: 0, resetAt: now + windowMs };
+  if (now > record.resetAt) {
+    record.count = 0;
+    record.resetAt = now + windowMs;
+  }
+
+  record.count += 1;
+  ipRequestCounts.set(ip, record);
+
+  if (record.count > maxRequests) {
+    console.warn(`[SECURITY] Rate limit exceeded for IP: ${ip}`);
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+  }
+  next();
+}
+
+// Input sanitizer utility to strip HTML / injection payloads
+function sanitizeInput(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(/[<>]/g, '').trim();
+}
+
+app.use(rateLimiter);
+
 const otpStore = new Map(); // email -> { otp, expiresAt, pendingUser }
 
 // Healthcheck / Keep-Alive Endpoint (for UptimeRobot / Cron pings)
@@ -35,13 +69,32 @@ app.get('/api/ping', (req, res) => {
 
 // Auth & Brevo OTP Email Routes
 app.post('/api/auth/send-otp', async (req, res) => {
-  const { email, fullName, password } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email is required.' });
+  let { email, fullName, password } = req.body;
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ error: 'Invalid email address provided.' });
+  }
+
+  email = email.toLowerCase().trim();
+  fullName = sanitizeInput(fullName);
+
+  // Email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email) || email.length > 254) {
+    return res.status(400).json({ error: 'Invalid email address format.' });
+  }
+
+  // Account Lockout check (5 failed attempts = 15 min lock)
+  const now = Date.now();
+  const lockRecord = accountAttempts.get(email);
+  if (lockRecord && lockRecord.lockedUntil && now < lockRecord.lockedUntil) {
+    console.warn(`[SECURITY] Blocked request for locked email: ${email}`);
+    return res.status(429).json({ error: 'Account temporarily locked due to repeated attempts. Please try again later.' });
+  }
 
   const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-  otpStore.set(email.toLowerCase(), { otp: generatedOtp, expiresAt, pendingUser: { email, fullName, password } });
+  otpStore.set(email, { otp: generatedOtp, expiresAt, pendingUser: { email, fullName, password } });
 
   const result = await sendEmail({
     to: email,
@@ -59,33 +112,53 @@ app.post('/api/auth/send-otp', async (req, res) => {
     `
   });
 
-  res.json({ success: true, message: 'OTP sent successfully to your email.', ...result });
+  res.json({ success: true, message: 'If the email is valid, a verification code has been dispatched.' });
 });
 
 app.post('/api/auth/verify-otp', (req, res) => {
-  const { email, otp } = req.body;
-  if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required.' });
+  let { email, otp } = req.body;
+  if (!email || !otp) return res.status(400).json({ error: 'Invalid verification details.' });
 
-  const record = otpStore.get(email.toLowerCase());
-  if (!record) return res.status(400).json({ error: 'OTP not found or expired. Please request a new OTP.' });
+  email = email.toLowerCase().trim();
+  otp = String(otp).trim();
 
-  if (Date.now() > record.expiresAt) {
-    otpStore.delete(email.toLowerCase());
-    return res.status(400).json({ error: 'OTP has expired. Please request a new code.' });
+  const now = Date.now();
+  const lockRecord = accountAttempts.get(email) || { attempts: 0, lockedUntil: null };
+
+  if (lockRecord.lockedUntil && now < lockRecord.lockedUntil) {
+    return res.status(429).json({ error: 'Account temporarily locked due to repeated attempts. Please try again later.' });
   }
 
-  if (record.otp !== otp.trim()) {
-    return res.status(400).json({ error: 'Invalid OTP code. Please check your email and try again.' });
+  const record = otpStore.get(email);
+  if (!record || now > record.expiresAt) {
+    if (record) otpStore.delete(email);
+    return res.status(400).json({ error: 'Verification code expired or invalid.' });
   }
 
-  // OTP match verified!
-  otpStore.delete(email.toLowerCase());
-  res.json({ success: true, message: 'OTP verified successfully!' });
+  if (record.otp !== otp) {
+    lockRecord.attempts += 1;
+    if (lockRecord.attempts >= 5) {
+      lockRecord.lockedUntil = now + 15 * 60 * 1000; // 15 min lock
+      console.warn(`[SECURITY] Account locked for email: ${email}`);
+    }
+    accountAttempts.set(email, lockRecord);
+    return res.status(400).json({ error: 'Verification code expired or invalid.' });
+  }
+
+  // OTP match verified: Reset lockout counter & purge OTP
+  accountAttempts.delete(email);
+  otpStore.delete(email);
+  res.json({ success: true, message: 'Identity verified successfully!' });
 });
 
 app.post('/api/auth/send-reset-email', async (req, res) => {
-  const { email } = req.body;
-  const result = await sendEmail({
+  let { email } = req.body;
+  if (!email || typeof email !== 'string') {
+    return res.json({ success: true, message: 'If that email is registered, you will receive password reset instructions.' });
+  }
+  email = email.toLowerCase().trim();
+
+  await sendEmail({
     to: email,
     subject: 'VeriChain Password Reset Instructions',
     htmlContent: `
@@ -97,7 +170,9 @@ app.post('/api/auth/send-reset-email', async (req, res) => {
       </div>
     `
   });
-  res.json(result);
+
+  // Always return identical generic message to prevent email enumeration
+  res.json({ success: true, message: 'If that email is registered, you will receive password reset instructions.' });
 });
 
 // API Routes

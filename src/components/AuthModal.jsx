@@ -98,11 +98,14 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: email.trim().toLowerCase(),
           password
         });
 
-        if (error) throw error;
+        if (error) {
+          // Safe, generic error message (Prevents user enumeration)
+          throw new Error('Incorrect email or password.');
+        }
 
         if (data.user) {
           try {
@@ -139,7 +142,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         onClose();
       }
     } catch (err) {
-      setMessage(err.message || 'Authentication error occurred');
+      // Always show sanitized generic message on auth failures
+      setMessage(err.message === 'Incorrect email or password.' ? err.message : (err.message || 'Authentication failed. Please check your credentials.'));
     } finally {
       setLoading(false);
     }
