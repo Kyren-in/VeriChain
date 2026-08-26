@@ -148,7 +148,7 @@ class BlockchainLedger {
   }
 
   issueCredential(credential) {
-    const { id, holderName, idType, idNumber, nationality, validUntil, issuer } = credential;
+    const { id, holderName, userEmail, userId, idType, idNumber, nationality, validUntil, issuer } = credential;
     
     const did = `did:verichain:${crypto.createHash('md5').update(idNumber + holderName).digest('hex').substring(0, 12)}`;
     const issueDate = new Date().toISOString().split('T')[0];
@@ -157,6 +157,8 @@ class BlockchainLedger {
       id,
       did,
       holderName,
+      userEmail: userEmail || null,
+      userId: userId || null,
       idType,
       idNumber,
       nationality,

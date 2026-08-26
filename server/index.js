@@ -105,7 +105,7 @@ app.post('/api/auth/send-reset-email', async (req, res) => {
 // 1. Issue Credential
 app.post('/api/credentials/issue', (req, res) => {
   try {
-    const { holderName, idType, idNumber, nationality, validUntil, issuer } = req.body;
+    const { holderName, userEmail, userId, idType, idNumber, nationality, validUntil, issuer } = req.body;
     
     if (!holderName || !idNumber) {
       return res.status(400).json({ error: 'Holder Name and ID Number are required.' });
@@ -116,6 +116,8 @@ app.post('/api/credentials/issue', (req, res) => {
     const result = ledger.issueCredential({
       id,
       holderName,
+      userEmail: userEmail || null,
+      userId: userId || null,
       idType: idType || 'Aadhaar',
       idNumber,
       nationality: nationality || 'Indian',
