@@ -580,84 +580,111 @@ export default function IssuerPortal({ onCredentialIssued }) {
             )}
           </div>
 
-          {/* Search Results / Credential Cards */}
-          {userCredentialsToRevoke.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '20px' }}>
-              {userCredentialsToRevoke.map((cred) => (
-                <div 
-                  key={cred.id}
-                  className="neu-card"
-                  style={{
-                    padding: '24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: '16px',
-                    border: cred.isRevoked ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid var(--border-subtle)',
-                    background: cred.isRevoked ? 'rgba(245, 158, 11, 0.05)' : 'var(--bg-midnight-card)'
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                      <div>
-                        <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--saffron)', textTransform: 'uppercase' }}>
-                          CREDENTIAL ID: {cred.id}
-                        </span>
-                        <h4 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#FFFFFF', marginTop: '2px' }}>
-                          {cred.holderName}
-                        </h4>
-                      </div>
+          {/* Search Results / Credential Cards with Status Sub-tabs */}
+          {userCredentialsToRevoke.length > 0 && (() => {
+            const today = new Date();
+            const currentCreds = userCredentialsToRevoke.filter(c => !c.isRevoked && new Date(c.validUntil) >= today);
+            const revokedCreds = userCredentialsToRevoke.filter(c => c.isRevoked);
+            const expiredCreds = userCredentialsToRevoke.filter(c => !c.isRevoked && new Date(c.validUntil) < today);
 
-                      {cred.isRevoked ? (
-                        <span className="badge-revoked">⚠️ REVOKED</span>
-                      ) : (
-                        <span className="badge-valid">✅ ACTIVE</span>
-                      )}
-                    </div>
-
-                    <div className="neu-card-inset" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
-                      <div>
-                        <span style={{ color: 'var(--text-muted)' }}>DID: </span>
-                        <span className="mono-text" style={{ color: 'var(--digital-blue-light)', fontSize: '0.78rem' }}>{cred.did}</span>
-                      </div>
-                      <div>
-                        <span style={{ color: 'var(--text-muted)' }}>ID Document: </span>
-                        <strong>{cred.idType} ({cred.idNumber})</strong>
-                      </div>
-                      <div>
-                        <span style={{ color: 'var(--text-muted)' }}>Valid Until: </span>
-                        <strong>{cred.validUntil}</strong>
-                      </div>
-                      <div>
-                        <span style={{ color: 'var(--text-muted)' }}>Issuing Authority: </span>
-                        <strong>{cred.issuer}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                    <span className="mono-text" style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>
-                      Target: {cred.did}
-                    </span>
-                    {cred.isRevoked ? (
-                      <span style={{ fontSize: '0.8rem', color: '#FBBF24', fontWeight: '700' }}>
-                        Revocation Anchored On-Chain
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => handleRevokeCredential(cred)}
-                        disabled={revokingId === cred.id}
-                        className="btn-saffron"
-                        style={{ background: '#DC2626', padding: '9px 18px', fontSize: '0.85rem' }}
-                      >
-                        {revokingId === cred.id ? 'Revoking On-Chain...' : <><Trash2 size={15} /> Revoke This DID</>}
-                      </button>
-                    )}
-                  </div>
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Result Status Badges / Category summary */}
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <span className="badge-valid" style={{ padding: '6px 14px' }}>
+                    Active DIDs: {currentCreds.length}
+                  </span>
+                  <span className="badge-revoked" style={{ padding: '6px 14px', background: 'rgba(239, 68, 68, 0.15)', color: '#F87171' }}>
+                    Revoked DIDs: {revokedCreds.length}
+                  </span>
+                  <span className="badge-revoked" style={{ padding: '6px 14px', background: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24', borderColor: 'rgba(245, 158, 11, 0.3)' }}>
+                    Expired DIDs: {expiredCreds.length}
+                  </span>
                 </div>
-              ))}
-            </div>
-          )}
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '20px' }}>
+                  {userCredentialsToRevoke.map((cred) => {
+                    const isPastDate = new Date(cred.validUntil) < today;
+                    return (
+                      <div 
+                        key={cred.id}
+                        className="neu-card"
+                        style={{
+                          padding: '24px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: '16px',
+                          border: cred.isRevoked ? '1px solid rgba(239, 68, 68, 0.4)' : isPastDate ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid var(--border-subtle)',
+                          background: cred.isRevoked ? 'rgba(239, 68, 68, 0.05)' : isPastDate ? 'rgba(245, 158, 11, 0.05)' : 'var(--bg-midnight-card)'
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <div>
+                              <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--saffron)', textTransform: 'uppercase' }}>
+                                CREDENTIAL ID: {cred.id}
+                              </span>
+                              <h4 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#FFFFFF', marginTop: '2px' }}>
+                                {cred.holderName}
+                              </h4>
+                            </div>
+
+                            {cred.isRevoked ? (
+                              <span className="badge-revoked">⚠️ REVOKED</span>
+                            ) : isPastDate ? (
+                              <span className="badge-revoked" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24', borderColor: 'rgba(245, 158, 11, 0.3)' }}>⏳ EXPIRED</span>
+                            ) : (
+                              <span className="badge-valid">✅ ACTIVE</span>
+                            )}
+                          </div>
+
+                          <div className="neu-card-inset" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
+                            <div>
+                              <span style={{ color: 'var(--text-muted)' }}>DID: </span>
+                              <span className="mono-text" style={{ color: 'var(--digital-blue-light)', fontSize: '0.78rem' }}>{cred.did}</span>
+                            </div>
+                            <div>
+                              <span style={{ color: 'var(--text-muted)' }}>ID Document: </span>
+                              <strong>{cred.idType} ({cred.idNumber})</strong>
+                            </div>
+                            <div>
+                              <span style={{ color: 'var(--text-muted)' }}>Valid Until: </span>
+                              <strong style={{ color: isPastDate ? '#F87171' : '#FFFFFF' }}>{cred.validUntil}</strong>
+                            </div>
+                            <div>
+                              <span style={{ color: 'var(--text-muted)' }}>Issuing Authority: </span>
+                              <strong>{cred.issuer}</strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                          <span className="mono-text" style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>
+                            Target: {cred.did}
+                          </span>
+                          {cred.isRevoked ? (
+                            <span style={{ fontSize: '0.8rem', color: '#F87171', fontWeight: '700' }}>
+                              Revocation Anchored On-Chain
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleRevokeCredential(cred)}
+                              disabled={revokingId === cred.id}
+                              className="btn-saffron"
+                              style={{ background: '#DC2626', padding: '9px 18px', fontSize: '0.85rem' }}
+                            >
+                              {revokingId === cred.id ? 'Revoking On-Chain...' : <><Trash2 size={15} /> Revoke This DID</>}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
         </div>
       )}

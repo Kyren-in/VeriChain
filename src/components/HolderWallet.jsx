@@ -10,6 +10,7 @@ import { API_BASE_URL } from '../api';
 
 export default function HolderWallet({ user }) {
   const [credentials, setCredentials] = useState([]);
+  const [walletTab, setWalletTab] = useState('current'); // 'current' | 'revoked' | 'expired'
   const [loading, setLoading] = useState(true);
   const [selectedCred, setSelectedCred] = useState(null);
   const [qrUrl, setQrUrl] = useState('');
@@ -315,94 +316,175 @@ export default function HolderWallet({ user }) {
         </div>
       )}
 
+      {/* Wallet Category Filter Tabs: Current DID, Revoked DID, Expired DID */}
+      <div 
+        className="clay-card" 
+        style={{ 
+          padding: '12px 18px', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          flexWrap: 'wrap', 
+          gap: '12px' 
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setWalletTab('current')}
+            className={walletTab === 'current' ? 'btn-primary' : 'btn-ghost'}
+            style={{ padding: '8px 16px', fontSize: '0.84rem' }}
+          >
+            <Shield size={16} /> Current Active DIDs ({credentials.filter(c => !c.isRevoked && new Date(c.validUntil) >= new Date()).length})
+          </button>
+
+          <button
+            onClick={() => setWalletTab('revoked')}
+            className={walletTab === 'revoked' ? 'btn-saffron' : 'btn-ghost'}
+            style={{ 
+              padding: '8px 16px', 
+              fontSize: '0.84rem', 
+              background: walletTab === 'revoked' ? '#DC2626' : 'transparent',
+              color: '#FFFFFF'
+            }}
+          >
+            <ShieldAlert size={16} /> Revoked DIDs ({credentials.filter(c => c.isRevoked).length})
+          </button>
+
+          <button
+            onClick={() => setWalletTab('expired')}
+            className={walletTab === 'expired' ? 'btn-saffron' : 'btn-ghost'}
+            style={{ 
+              padding: '8px 16px', 
+              fontSize: '0.84rem',
+              background: walletTab === 'expired' ? 'var(--saffron)' : 'transparent',
+              color: '#FFFFFF'
+            }}
+          >
+            <AlertTriangle size={16} /> Expired DIDs ({credentials.filter(c => !c.isRevoked && new Date(c.validUntil) < new Date()).length})
+          </button>
+        </div>
+
+        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+          {walletTab === 'current' && 'Verified, active & valid for scanning'}
+          {walletTab === 'revoked' && 'Revoked on-chain by Authority / User'}
+          {walletTab === 'expired' && 'Expired validity date'}
+        </span>
+      </div>
+
       {/* Credential Cards Grid */}
       {loading ? (
         <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-dim)' }}>Loading tourist wallet credentials...</div>
-      ) : credentials.length === 0 ? (
-        <div className="clay-card" style={{ padding: '60px 30px', textAlign: 'center', color: 'var(--saffron)' }}>
-          <ShieldAlert size={42} style={{ marginBottom: '14px' }} />
-          <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '8px' }}>
-            No DID Credential Issued Yet
-          </h3>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto' }}>
-            Your account is verified, but an official Verifiable Credential has not been issued to <strong>{user?.user_metadata?.full_name || user?.email}</strong> by the Tourism Authority yet.
-          </p>
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '24px' }}>
-          {credentials.map((cred) => (
-            <div
-              key={cred.id}
-              className="clay-card"
-              style={{
-                padding: '26px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                position: 'relative',
-                border: cred.isRevoked ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid rgba(255, 255, 255, 0.12)'
-              }}
-            >
-              <div>
-                {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
-                  <div>
-                    <span style={{ fontSize: '0.72rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--saffron)' }}>
-                      VERIFIABLE IDENTITY PASS
-                    </span>
-                    <h3 style={{ fontSize: '1.3rem', fontWeight: '800', marginTop: '2px', color: '#FFFFFF' }}>{cred.holderName}</h3>
-                  </div>
+      ) : (() => {
+        const today = new Date();
+        let displayCreds = credentials;
 
-                  {cred.isRevoked ? (
-                    <span className="badge-revoked">⚠️ REVOKED</span>
-                  ) : (
-                    <span className="badge-valid">✅ VERIFIED</span>
-                  )}
-                </div>
+        if (walletTab === 'current') {
+          displayCreds = credentials.filter(c => !c.isRevoked && new Date(c.validUntil) >= today);
+        } else if (walletTab === 'revoked') {
+          displayCreds = credentials.filter(c => c.isRevoked);
+        } else if (walletTab === 'expired') {
+          displayCreds = credentials.filter(c => !c.isRevoked && new Date(c.validUntil) < today);
+        }
 
-                {/* Details list */}
-                <div className="neu-card-inset" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.88rem', marginBottom: '20px' }}>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>DID: </span>
-                    <span className="mono-text" style={{ fontSize: '0.78rem', color: 'var(--digital-blue-light)' }}>{cred.did}</span>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>ID Type: </span>
-                    <strong style={{ color: '#FFFFFF' }}>{cred.idType}</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Doc Number: </span>
-                    <span className="mono-text" style={{ color: '#FFFFFF' }}>{privacyMode ? '••••-••••-55' : cred.idNumber}</span>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Nationality: </span>
-                    <strong style={{ color: '#FFFFFF' }}>{cred.nationality}</strong>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Valid Until: </span>
-                    <strong style={{ color: 'var(--india-green)' }}>{cred.validUntil}</strong>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action */}
-              <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="mono-text" style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>
-                  {cred.id}
-                </span>
-
-                <button
-                  onClick={() => openQrModal(cred)}
-                  className="btn-primary"
-                  style={{ padding: '9px 18px', fontSize: '0.85rem' }}
-                >
-                  <QrCode size={16} /> Present QR Pass
-                </button>
-              </div>
+        if (displayCreds.length === 0) {
+          return (
+            <div className="clay-card" style={{ padding: '60px 30px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <ShieldAlert size={42} style={{ marginBottom: '14px', opacity: 0.4 }} />
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '8px' }}>
+                {walletTab === 'current' && 'No Active DIDs Found'}
+                {walletTab === 'revoked' && 'No Revoked DIDs'}
+                {walletTab === 'expired' && 'No Expired DIDs'}
+              </h3>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-dim)', maxWidth: '420px', margin: '0 auto' }}>
+                {walletTab === 'current' && 'You do not have any active verifiable digital credentials at this moment.'}
+                {walletTab === 'revoked' && 'None of your credentials have been revoked on the blockchain.'}
+                {walletTab === 'expired' && 'You have no credentials past their validity expiration date.'}
+              </p>
             </div>
-          ))}
-        </div>
-      )}
+          );
+        }
+
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '24px' }}>
+            {displayCreds.map((cred) => {
+              const isPastDate = new Date(cred.validUntil) < today;
+              return (
+                <div
+                  key={cred.id}
+                  className="clay-card"
+                  style={{
+                    padding: '26px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    position: 'relative',
+                    border: cred.isRevoked ? '1px solid rgba(239, 68, 68, 0.4)' : isPastDate ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid rgba(255, 255, 255, 0.12)'
+                  }}
+                >
+                  <div>
+                    {/* Header */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
+                      <div>
+                        <span style={{ fontSize: '0.72rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--saffron)' }}>
+                          VERIFIABLE IDENTITY PASS
+                        </span>
+                        <h3 style={{ fontSize: '1.3rem', fontWeight: '800', marginTop: '2px', color: '#FFFFFF' }}>{cred.holderName}</h3>
+                      </div>
+
+                      {cred.isRevoked ? (
+                        <span className="badge-revoked">⚠️ REVOKED</span>
+                      ) : isPastDate ? (
+                        <span className="badge-revoked" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24', borderColor: 'rgba(245, 158, 11, 0.3)' }}>⏳ EXPIRED</span>
+                      ) : (
+                        <span className="badge-valid">✅ VERIFIED</span>
+                      )}
+                    </div>
+
+                    {/* Details list */}
+                    <div className="neu-card-inset" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.88rem', marginBottom: '20px' }}>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>DID: </span>
+                        <span className="mono-text" style={{ fontSize: '0.78rem', color: 'var(--digital-blue-light)' }}>{cred.did}</span>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>ID Type: </span>
+                        <strong style={{ color: '#FFFFFF' }}>{cred.idType}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Doc Number: </span>
+                        <span className="mono-text" style={{ color: '#FFFFFF' }}>{privacyMode ? '••••-••••-55' : cred.idNumber}</span>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Nationality: </span>
+                        <strong style={{ color: '#FFFFFF' }}>{cred.nationality}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Valid Until: </span>
+                        <strong style={{ color: isPastDate ? '#F87171' : '#FFFFFF' }}>{cred.validUntil}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Issuing Authority: </span>
+                        <span style={{ color: '#E2E8F0', fontSize: '0.82rem' }}>{cred.issuer}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                    <button
+                      onClick={() => openQrModal(cred)}
+                      className="btn-primary"
+                      style={{ flex: 1, justifyContent: 'center' }}
+                    >
+                      <QrCode size={18} /> Show QR Pass
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* QR Code Presentation Modal */}
       {selectedCred && (
