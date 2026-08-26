@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { API_BASE_URL } from '../api';
-import { Shield, Mail, Lock, User, UserCheck, X, Phone } from 'lucide-react';
+import { Shield, Mail, Lock, User, UserCheck, X, Phone, KeyRound, Sparkles } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [isRegister, setIsRegister] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [step, setStep] = useState(1); // 1: input details, 2: enter OTP
+  const [step, setStep] = useState(1);
   const [otpInput, setOtpInput] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState('user'); // 'user' default
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -25,12 +24,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
     try {
       if (isForgotPassword) {
-        // Brevo / Supabase Password Reset Request
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
         });
 
-        // Trigger Brevo API backend fallback notification
         await fetch(`${API_BASE_URL}/api/auth/send-reset-email`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -41,7 +38,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         setMessage('Password reset link sent to your email address!');
       } else if (isRegister) {
         if (step === 1) {
-          // Send Brevo OTP code to user's email
           const res = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -55,7 +51,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           setStep(2);
           setMessage('An OTP code has been sent to your email! Please enter it below to verify.');
         } else if (step === 2) {
-          // Verify OTP entered by user
           const verifyRes = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -67,8 +62,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             throw new Error(verifyData.error || 'Invalid OTP code.');
           }
 
-          // OTP verified -> create account in Supabase
-          // Since Brevo OTP is already verified above, bypass Supabase confirmation email rate limiter
           const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -84,9 +77,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
           if (error) throw error;
 
-          // Insert into Supabase 'profiles' table so user shows up in database queries
           if (data.user) {
-            const { error: profileErr } = await supabase.from('profiles').upsert({
+            await supabase.from('profiles').upsert({
               id: data.user.id,
               email: data.user.email,
               full_name: fullName,
@@ -94,7 +86,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               role: 'user',
               updated_at: new Date().toISOString()
             });
-            if (profileErr) console.error('Profile upsert error:', profileErr);
           }
 
           setMessage('Account verified and created successfully!');
@@ -106,7 +97,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           }, 1500);
         }
       } else {
-        // Sign In
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
@@ -114,7 +104,6 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
         if (error) throw error;
 
-        // Sync profile on login if missing, but preserve assigned database role
         if (data.user) {
           try {
             const { data: existingProfile } = await supabase
@@ -150,8 +139,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(8px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(10px)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
@@ -160,13 +149,14 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
       }}
     >
       <div
-        className="glass-panel"
+        className="clay-card"
         style={{
           width: '100%',
-          maxWidth: '440px',
-          padding: '32px',
-          borderRadius: '24px',
-          position: 'relative'
+          maxWidth: '450px',
+          padding: '34px',
+          borderRadius: '26px',
+          position: 'relative',
+          background: 'var(--bg-midnight-card)'
         }}
       >
         <button
@@ -184,27 +174,28 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           <X size={20} />
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '24px' }}>
           <div
             style={{
-              background: 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)',
-              padding: '10px',
-              borderRadius: '12px',
-              color: '#fff'
+              background: 'linear-gradient(135deg, #FF8A3D 0%, #2563EB 100%)',
+              padding: '12px',
+              borderRadius: '16px',
+              color: '#FFFFFF',
+              boxShadow: 'var(--clay-pill)'
             }}
           >
             <Shield size={24} />
           </div>
           <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>
+            <h2 style={{ fontSize: '1.3rem', fontWeight: '800' }}>
               {isForgotPassword ? 'Reset Password' : isRegister ? 'Create VeriChain Account' : 'Sign In to VeriChain'}
             </h2>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
               {isForgotPassword
-                ? 'Enter your email for a Brevo reset link'
+                ? 'Enter your email for a secure password reset link'
                 : isRegister
                 ? 'Register with role authorization'
-                : 'Select your account credentials'}
+                : 'Access your decentralized identity portal'}
             </p>
           </div>
         </div>
@@ -212,12 +203,13 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         {message && (
           <div
             style={{
-              padding: '10px 14px',
-              borderRadius: '10px',
-              background: message.includes('error') ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-              color: message.includes('error') ? 'var(--accent-pink)' : 'var(--accent-emerald)',
+              padding: '12px 14px',
+              borderRadius: '12px',
+              background: message.includes('error') ? 'rgba(239, 68, 68, 0.15)' : 'var(--india-green-soft)',
+              color: message.includes('error') ? '#F87171' : '#34D399',
               fontSize: '0.85rem',
-              marginBottom: '16px'
+              marginBottom: '18px',
+              border: `1px solid ${message.includes('error') ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`
             }}
           >
             {message}
@@ -227,9 +219,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {isRegister && step === 2 ? (
             <div>
-              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Enter 6-Digit Email OTP</label>
+              <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Enter 6-Digit Email OTP</label>
               <div style={{ position: 'relative' }}>
-                <UserCheck size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--primary)' }} />
+                <UserCheck size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--digital-blue-light)' }} />
                 <input
                   type="text"
                   required
@@ -237,23 +229,19 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   placeholder="e.g. 849201"
                   value={otpInput}
                   onChange={(e) => setOtpInput(e.target.value)}
+                  className="input-field"
                   style={{
-                    width: '100%',
-                    padding: '10px 12px 10px 40px',
-                    borderRadius: '10px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid var(--primary)',
-                    color: '#fff',
+                    paddingLeft: '44px',
                     letterSpacing: '4px',
-                    fontSize: '1.1rem',
-                    outline: 'none'
+                    fontSize: '1.15rem',
+                    textAlign: 'center'
                   }}
                 />
               </div>
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.75rem', cursor: 'pointer', marginTop: '8px' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.78rem', cursor: 'pointer', marginTop: '8px' }}
               >
                 ← Back to Edit Email
               </button>
@@ -263,47 +251,33 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               {isRegister && (
                 <>
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Full Name</label>
+                    <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Full Name</label>
                     <div style={{ position: 'relative' }}>
-                      <User size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
+                      <User size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-dim)' }} />
                       <input
                         type="text"
                         required
                         placeholder="e.g. Aarav Sharma"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '10px 12px 10px 40px',
-                          borderRadius: '10px',
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid var(--border-color)',
-                          color: '#fff',
-                          outline: 'none'
-                        }}
+                        className="input-field"
+                        style={{ paddingLeft: '44px' }}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Phone Number</label>
+                    <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Phone Number</label>
                     <div style={{ position: 'relative' }}>
-                      <Phone size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
+                      <Phone size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-dim)' }} />
                       <input
                         type="tel"
                         required
                         placeholder="+91 98765 43210"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '10px 12px 10px 40px',
-                          borderRadius: '10px',
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid var(--border-color)',
-                          color: '#fff',
-                          outline: 'none'
-                        }}
+                        className="input-field"
+                        style={{ paddingLeft: '44px' }}
                       />
                     </div>
                   </div>
@@ -311,48 +285,34 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               )}
 
               <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Email Address</label>
+                <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Email Address</label>
                 <div style={{ position: 'relative' }}>
-                  <Mail size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
+                  <Mail size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-dim)' }} />
                   <input
                     type="email"
                     required
                     placeholder="name@domain.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px 10px 40px',
-                      borderRadius: '10px',
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid var(--border-color)',
-                      color: '#fff',
-                      outline: 'none'
-                    }}
+                    className="input-field"
+                    style={{ paddingLeft: '44px' }}
                   />
                 </div>
               </div>
 
               {!isForgotPassword && (
                 <div>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Password</label>
+                  <label style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Password</label>
                   <div style={{ position: 'relative' }}>
-                    <Lock size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
+                    <Lock size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-dim)' }} />
                     <input
                       type="password"
                       required
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px 10px 40px',
-                        borderRadius: '10px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid var(--border-color)',
-                        color: '#fff',
-                        outline: 'none'
-                      }}
+                      className="input-field"
+                      style={{ paddingLeft: '44px' }}
                     />
                   </div>
                 </div>
@@ -363,18 +323,18 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary"
-            style={{ width: '100%', marginTop: '8px', padding: '12px', justifyContent: 'center' }}
+            className="btn-saffron"
+            style={{ width: '100%', marginTop: '6px', padding: '13px', justifyContent: 'center' }}
           >
-            {loading ? 'Processing...' : isForgotPassword ? 'Send Reset Link' : isRegister ? (step === 2 ? 'Verify OTP & Create Account' : 'Send Verification OTP') : 'Sign In'}
+            {loading ? 'Processing...' : isForgotPassword ? 'Send Reset Link' : isRegister ? (step === 2 ? 'Verify OTP & Create Account' : 'Send Verification OTP') : 'Sign In to Portal'}
           </button>
         </form>
 
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+        <div style={{ marginTop: '22px', textAlign: 'center', fontSize: '0.84rem', color: 'var(--text-muted)' }}>
           {isForgotPassword ? (
             <button
               onClick={() => setIsForgotPassword(false)}
-              style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer' }}
+              style={{ background: 'none', border: 'none', color: 'var(--digital-blue-light)', cursor: 'pointer', fontWeight: '600' }}
             >
               Back to Sign In
             </button>
@@ -383,7 +343,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               Already have an account?{' '}
               <button
                 onClick={() => setIsRegister(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: '600' }}
+                style={{ background: 'none', border: 'none', color: 'var(--saffron)', cursor: 'pointer', fontWeight: '700' }}
               >
                 Sign In
               </button>
@@ -392,7 +352,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <button
                 onClick={() => setIsForgotPassword(true)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.75rem' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: '0.78rem' }}
               >
                 Forgot Password?
               </button>
@@ -400,9 +360,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                 Don't have an account?{' '}
                 <button
                   onClick={() => setIsRegister(true)}
-                  style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: '600' }}
+                  style={{ background: 'none', border: 'none', color: 'var(--saffron)', cursor: 'pointer', fontWeight: '700' }}
                 >
-                  Register
+                  Register Here
                 </button>
               </div>
             </div>

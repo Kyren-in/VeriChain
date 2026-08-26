@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import { Wallet, QrCode, Shield, ShieldAlert, CheckCircle, RefreshCw, X, AlertTriangle, Eye, EyeOff, KeyRound, Trash2, Settings } from 'lucide-react';
+import { 
+  Wallet, QrCode, Shield, ShieldAlert, CheckCircle, RefreshCw, 
+  X, AlertTriangle, Eye, EyeOff, KeyRound, Trash2, Settings, 
+  Fingerprint, Sparkles, Lock, ArrowRight, Layers 
+} from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { API_BASE_URL } from '../api';
 
@@ -13,7 +17,7 @@ export default function HolderWallet({ user }) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [settingsMsg, setSettingsMsg] = useState('');
-  const [selfRevokeStep, setSelfRevokeStep] = useState(1); // 1: initial, 2: OTP sent
+  const [selfRevokeStep, setSelfRevokeStep] = useState(1);
   const [selfRevokeOtp, setSelfRevokeOtp] = useState('');
   const [revokeLoading, setRevokeLoading] = useState(false);
 
@@ -45,7 +49,6 @@ export default function HolderWallet({ user }) {
     if (!selfRevokeOtp.trim()) return;
     setRevokeLoading(true);
     try {
-      // 1. Verify OTP first
       const verifyRes = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,7 +59,6 @@ export default function HolderWallet({ user }) {
         throw new Error(verifyData.error || 'Invalid OTP code.');
       }
 
-      // 2. Process self-revocation for user's credentials
       if (credentials.length > 0) {
         for (const cred of credentials) {
           await fetch(`${API_BASE_URL}/api/credentials/revoke`, {
@@ -104,7 +106,6 @@ export default function HolderWallet({ user }) {
       const res = await fetch(`${API_BASE_URL}/api/credentials`);
       const allCreds = await res.json();
       
-      // Strict user privacy filter: Match credential holderName or DID with current user metadata
       const userName = user?.user_metadata?.full_name?.toLowerCase() || '';
       const userEmail = user?.email?.toLowerCase() || '';
 
@@ -129,11 +130,9 @@ export default function HolderWallet({ user }) {
   const openQrModal = async (cred) => {
     setSelectedCred(cred);
     try {
-      // Clean internal DB properties (isRevoked, hash) so QR code payload exactly matches issued schema
       const { isRevoked, hash, userEmail, userId, ...cleanPayload } = cred;
-
       const payloadString = JSON.stringify(cleanPayload, null, 2);
-      const url = await QRCode.toDataURL(payloadString, { width: 300, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
+      const url = await QRCode.toDataURL(payloadString, { width: 320, margin: 2, color: { dark: '#0B1220', light: '#FFFFFF' } });
       setQrUrl(url);
     } catch (err) {
       console.error('QR generation error:', err);
@@ -141,42 +140,58 @@ export default function HolderWallet({ user }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
+      
       {/* Header Bar */}
-      <div className="glass-panel" style={{ padding: '20px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ background: 'rgba(16, 185, 129, 0.15)', padding: '12px', borderRadius: '14px', color: 'var(--accent-emerald)' }}>
+      <div className="clay-card" style={{ padding: '22px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div 
+            style={{ 
+              background: 'linear-gradient(135deg, #10B981 0%, #047857 100%)', 
+              padding: '12px', 
+              borderRadius: '16px', 
+              color: '#FFFFFF',
+              boxShadow: 'var(--clay-pill), var(--neu-glow-green)'
+            }}
+          >
             <Wallet size={26} />
           </div>
           <div>
-            <h2 style={{ fontSize: '1.3rem', fontWeight: '700' }}>Holder Digital Identity Wallet</h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Self-Sovereign Identity Credentials</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: '800' }}>Holder Digital Identity Wallet</h2>
+              <span className="badge-valid" style={{ fontSize: '0.68rem', padding: '2px 8px' }}>SELF-SOVEREIGN</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Decentralized Verifiable Credentials</p>
               {user && (
-                <span className="badge-valid" style={{ fontSize: '0.7rem', padding: '2px 8px', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary)' }}>
-                  User ID: {user.id?.substring(0, 8)}... | {user.email}
+                <span className="mono-text" style={{ fontSize: '0.72rem', color: 'var(--digital-blue-light)' }}>
+                  • {user.email}
                 </span>
               )}
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => setPrivacyMode(!privacyMode)}
             className="btn-secondary"
-            style={{ borderColor: privacyMode ? 'var(--accent-emerald)' : 'var(--border-color)', color: privacyMode ? '#34d399' : 'var(--text-main)' }}
+            style={{ 
+              borderColor: privacyMode ? 'var(--india-green)' : 'var(--border-subtle)', 
+              color: privacyMode ? '#34D399' : 'var(--text-main)',
+              fontSize: '0.85rem'
+            }}
           >
             {privacyMode ? <EyeOff size={16} /> : <Eye size={16} />}
-            {privacyMode ? 'Minimal Field Disclosure (Active)' : 'Full Field Mode'}
+            {privacyMode ? 'Minimal Disclosure: ON' : 'Minimal Disclosure: OFF'}
           </button>
 
-          <button onClick={fetchCredentials} className="btn-secondary">
-            <RefreshCw size={16} /> Refresh
+          <button onClick={fetchCredentials} className="btn-secondary" style={{ fontSize: '0.85rem' }}>
+            <RefreshCw size={15} /> Refresh
           </button>
 
-          <button onClick={() => setIsSettingsOpen(true)} className="btn-secondary">
-            <Settings size={16} /> Account Options
+          <button onClick={() => setIsSettingsOpen(true)} className="btn-secondary" style={{ fontSize: '0.85rem' }}>
+            <Settings size={15} /> Settings
           </button>
         </div>
       </div>
@@ -187,8 +202,8 @@ export default function HolderWallet({ user }) {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.82)',
+            backdropFilter: 'blur(10px)',
             zIndex: 1000,
             display: 'flex',
             alignItems: 'center',
@@ -196,11 +211,11 @@ export default function HolderWallet({ user }) {
             padding: '20px'
           }}
         >
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', padding: '28px', borderRadius: '20px' }}>
+          <div className="clay-card" style={{ width: '100%', maxWidth: '460px', padding: '30px', borderRadius: '24px', background: 'var(--bg-midnight-card)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Settings color="var(--primary)" size={22} />
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '700' }}>Account & Security</h3>
+                <Settings color="var(--saffron)" size={22} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Account & Security</h3>
               </div>
               <button onClick={() => setIsSettingsOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <X size={20} />
@@ -208,87 +223,75 @@ export default function HolderWallet({ user }) {
             </div>
 
             {settingsMsg && (
-              <div style={{ padding: '10px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary)', fontSize: '0.85rem', marginBottom: '16px' }}>
+              <div style={{ padding: '12px 14px', borderRadius: '10px', background: 'var(--saffron-soft)', color: 'var(--saffron)', fontSize: '0.85rem', marginBottom: '16px', border: '1px solid rgba(255,138,61,0.3)' }}>
                 {settingsMsg}
               </div>
             )}
 
-            {/* User Profile Info Card */}
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '14px', borderRadius: '12px', marginBottom: '20px', border: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
+            {/* Profile Info */}
+            <div className="neu-card-inset" style={{ padding: '14px 16px', marginBottom: '20px', fontSize: '0.85rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Name:</span>
-                <strong style={{ color: '#fff' }}>{user?.user_metadata?.full_name || 'Standard User'}</strong>
+                <strong style={{ color: '#FFFFFF' }}>{user?.user_metadata?.full_name || 'Standard User'}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Email:</span>
-                <strong style={{ color: '#fff' }}>{user?.email}</strong>
+                <strong style={{ color: '#FFFFFF' }}>{user?.email}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-muted)' }}>User UUID:</span>
-                <span className="mono-text" style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)' }}>{user?.id}</span>
+                <span className="mono-text" style={{ fontSize: '0.75rem', color: 'var(--digital-blue-light)' }}>{user?.id}</span>
               </div>
             </div>
 
-            <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+            <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '22px' }}>
               <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reset Account Password</label>
               <input
                 type="password"
                 placeholder="Enter new password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: '10px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border-color)',
-                  color: '#fff'
-                }}
+                className="input-field"
               />
               <button type="submit" className="btn-primary" style={{ padding: '10px', justifyContent: 'center' }}>
                 <KeyRound size={16} /> Update Password
               </button>
             </form>
 
-            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <label style={{ fontSize: '0.8rem', color: 'var(--accent-pink)', display: 'block' }}>Danger Zone</label>
+            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <label style={{ fontSize: '0.8rem', color: 'var(--status-danger)', display: 'block', fontWeight: '700' }}>
+                Self-Sovereign Revocation Zone
+              </label>
               
-              {/* Self Revoke DID Button & OTP Verification */}
               {selfRevokeStep === 1 ? (
                 <button
                   type="button"
                   onClick={handleSendRevokeOtp}
                   disabled={revokeLoading}
                   className="btn-secondary"
-                  style={{ borderColor: 'rgba(245, 158, 11, 0.5)', color: '#fbbf24', width: '100%', justifyContent: 'center' }}
+                  style={{ borderColor: 'rgba(245, 158, 11, 0.5)', color: '#FBBF24', width: '100%', justifyContent: 'center' }}
                 >
                   <ShieldAlert size={16} /> {revokeLoading ? 'Sending OTP...' : 'Self-Revoke My DID Credential'}
                 </button>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '12px' }}>
-                  <label style={{ fontSize: '0.75rem', color: '#fbbf24' }}>Enter 6-Digit Email OTP to Confirm Revocation:</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(245, 158, 11, 0.1)', padding: '14px', borderRadius: '12px', border: '1px solid rgba(245,158,11,0.3)' }}>
+                  <label style={{ fontSize: '0.78rem', color: '#FBBF24', fontWeight: '600' }}>Enter 6-Digit Email OTP to Confirm Revocation:</label>
                   <input
                     type="text"
                     maxLength={6}
                     placeholder="Enter OTP"
                     value={selfRevokeOtp}
                     onChange={(e) => setSelfRevokeOtp(e.target.value)}
-                    style={{
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      background: 'rgba(0,0,0,0.3)',
-                      border: '1px solid #fbbf24',
-                      color: '#fff',
-                      letterSpacing: '3px',
-                      fontSize: '1rem'
-                    }}
+                    className="input-field"
+                    style={{ letterSpacing: '4px', textAlign: 'center', fontSize: '1.1rem' }}
                   />
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                       type="button"
                       onClick={handleConfirmSelfRevoke}
                       disabled={revokeLoading}
-                      className="btn-primary"
-                      style={{ flex: 1, padding: '8px', justifyContent: 'center', background: '#d97706' }}
+                      className="btn-saffron"
+                      style={{ flex: 1, padding: '9px', justifyContent: 'center' }}
                     >
                       {revokeLoading ? 'Revoking...' : 'Confirm Self-Revoke'}
                     </button>
@@ -296,7 +299,7 @@ export default function HolderWallet({ user }) {
                       type="button"
                       onClick={() => setSelfRevokeStep(1)}
                       className="btn-secondary"
-                      style={{ padding: '8px' }}
+                      style={{ padding: '9px' }}
                     >
                       Cancel
                     </button>
@@ -304,49 +307,50 @@ export default function HolderWallet({ user }) {
                 </div>
               )}
 
-              <button onClick={handleDeleteAccount} className="btn-secondary" style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: 'var(--accent-pink)', width: '100%', justifyContent: 'center' }}>
-                <Trash2 size={16} /> Delete Identity Account
+              <button onClick={handleDeleteAccount} className="btn-secondary" style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: '#F87171', width: '100%', justifyContent: 'center' }}>
+                <Trash2 size={16} /> Delete Identity Profile
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Credential Grid */}
+      {/* Credential Cards Grid */}
       {loading ? (
         <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-dim)' }}>Loading tourist wallet credentials...</div>
       ) : credentials.length === 0 ? (
-        <div className="glass-panel" style={{ padding: '60px', textAlign: 'center', color: 'var(--accent-amber)' }}>
-          <ShieldAlert size={36} style={{ marginBottom: '12px' }} />
-          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#fff', marginBottom: '6px' }}>DID Not Issued by Authority</h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Your account is verified, but an official Verifiable Credential has not been issued to <strong>{user?.user_metadata?.full_name || user?.email}</strong> yet.
+        <div className="clay-card" style={{ padding: '60px 30px', textAlign: 'center', color: 'var(--saffron)' }}>
+          <ShieldAlert size={42} style={{ marginBottom: '14px' }} />
+          <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '8px' }}>
+            No DID Credential Issued Yet
+          </h3>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto' }}>
+            Your account is verified, but an official Verifiable Credential has not been issued to <strong>{user?.user_metadata?.full_name || user?.email}</strong> by the Tourism Authority yet.
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '24px' }}>
           {credentials.map((cred) => (
             <div
               key={cred.id}
-              className="glass-panel"
+              className="clay-card"
               style={{
-                padding: '24px',
+                padding: '26px',
                 display: 'flex',
                 flexDirection: 'column',
-                justify: 'space-between',
+                justifyContent: 'space-between',
                 position: 'relative',
-                overflow: 'hidden',
-                borderColor: cred.isRevoked ? 'rgba(245, 158, 11, 0.3)' : 'var(--border-color)'
+                border: cred.isRevoked ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid rgba(255, 255, 255, 0.12)'
               }}
             >
-              {/* Card Header */}
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
                   <div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--accent-cyan)' }}>
-                      VERIFIABLE CREATOR ID
+                    <span style={{ fontSize: '0.72rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--saffron)' }}>
+                      VERIFIABLE IDENTITY PASS
                     </span>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginTop: '4px' }}>{cred.holderName}</h3>
+                    <h3 style={{ fontSize: '1.3rem', fontWeight: '800', marginTop: '2px', color: '#FFFFFF' }}>{cred.holderName}</h3>
                   </div>
 
                   {cred.isRevoked ? (
@@ -356,43 +360,43 @@ export default function HolderWallet({ user }) {
                   )}
                 </div>
 
-                {/* Details */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.9rem', marginBottom: '20px' }}>
+                {/* Details list */}
+                <div className="neu-card-inset" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.88rem', marginBottom: '20px' }}>
                   <div>
-                    <span style={{ color: 'var(--text-muted)' }}>DID: </span>
-                    <span className="mono-text" style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>{cred.did}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>DID: </span>
+                    <span className="mono-text" style={{ fontSize: '0.78rem', color: 'var(--digital-blue-light)' }}>{cred.did}</span>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-muted)' }}>ID Type: </span>
-                    <strong>{cred.idType}</strong>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>ID Type: </span>
+                    <strong style={{ color: '#FFFFFF' }}>{cred.idType}</strong>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-muted)' }}>Doc #: </span>
-                    <span className="mono-text">{privacyMode ? '••••-••••-55' : cred.idNumber}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Doc Number: </span>
+                    <span className="mono-text" style={{ color: '#FFFFFF' }}>{privacyMode ? '••••-••••-55' : cred.idNumber}</span>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-muted)' }}>Nationality: </span>
-                    <strong>{cred.nationality}</strong>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Nationality: </span>
+                    <strong style={{ color: '#FFFFFF' }}>{cred.nationality}</strong>
                   </div>
                   <div>
-                    <span style={{ color: 'var(--text-muted)' }}>Valid Until: </span>
-                    <strong style={{ color: 'var(--accent-emerald)' }}>{cred.validUntil}</strong>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Valid Until: </span>
+                    <strong style={{ color: 'var(--india-green)' }}>{cred.validUntil}</strong>
                   </div>
                 </div>
               </div>
 
               {/* Action */}
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="mono-text" style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+              <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="mono-text" style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>
                   {cred.id}
                 </span>
 
                 <button
                   onClick={() => openQrModal(cred)}
                   className="btn-primary"
-                  style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                  style={{ padding: '9px 18px', fontSize: '0.85rem' }}
                 >
-                  <QrCode size={16} /> Generate QR Code
+                  <QrCode size={16} /> Present QR Pass
                 </button>
               </div>
             </div>
@@ -400,53 +404,50 @@ export default function HolderWallet({ user }) {
         </div>
       )}
 
-      {/* QR Modal Overlay */}
+      {/* QR Code Presentation Modal */}
       {selectedCred && (
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.85)',
-            backdropFilter: 'blur(8px)',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(10px)',
             display: 'flex',
             alignItems: 'center',
-            justify: 'center',
+            justifyContent: 'center',
             zIndex: 1000,
             padding: '20px'
           }}
         >
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', padding: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+          <div className="clay-card" style={{ width: '100%', maxWidth: '450px', padding: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', background: 'var(--bg-midnight-card)' }}>
             <button
               onClick={() => setSelectedCred(null)}
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '18px', right: '18px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
             >
-              <X size={24} />
+              <X size={22} />
             </button>
 
-            <div style={{ textTransform: 'uppercase', fontSize: '0.75rem', color: 'var(--accent-emerald)', fontWeight: '700', letterSpacing: '1px', marginBottom: '6px' }}>
-              HOTEL / CHECKPOINT QR CHECK-IN
+            <div className="clay-badge-green" style={{ marginBottom: '8px' }}>
+              OFFICIAL VERIFIABLE QR PASS
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '4px' }}>{selectedCred.holderName}</h3>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: '800', marginBottom: '4px', color: '#FFFFFF' }}>{selectedCred.holderName}</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '20px', textAlign: 'center' }}>
-              Scan with Verifier Portal to validate authenticity on-chain.
+              Present this QR to hotel check-in or checkpoint terminals for instant on-chain validation.
             </p>
 
             {/* QR Image Frame */}
-            <div style={{ background: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 8px 30px rgba(0,0,0,0.5)', marginBottom: '20px' }}>
+            <div style={{ background: '#FFFFFF', padding: '16px', borderRadius: '18px', boxShadow: '0 12px 32px rgba(0,0,0,0.6)', marginBottom: '20px' }}>
               {qrUrl && <img src={qrUrl} alt="Credential QR" style={{ width: '220px', height: '220px', display: 'block' }} />}
             </div>
 
-            <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '12px 16px', borderRadius: '10px', width: '100%', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div className="neu-card-inset" style={{ padding: '14px 18px', width: '100%', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
-                <span>Credential Ref:</span>
-                <span className="mono-text">{selectedCred.id}</span>
+                <span>Credential Reference:</span>
+                <span className="mono-text" style={{ color: 'var(--digital-blue-light)' }}>{selectedCred.id}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
                 <span>Privacy Mode:</span>
-                <span style={{ color: privacyMode ? 'var(--accent-emerald)' : 'var(--accent-amber)' }}>
+                <span style={{ color: privacyMode ? '#34D399' : 'var(--saffron)', fontWeight: '700' }}>
                   {privacyMode ? 'Minimal Fields (No ID Raw Number)' : 'Full Details Included'}
                 </span>
               </div>
@@ -454,6 +455,7 @@ export default function HolderWallet({ user }) {
           </div>
         </div>
       )}
+
     </div>
   );
 }
