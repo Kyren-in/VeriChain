@@ -9,65 +9,6 @@ export default function VerifierPortal() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedName, setScannedName] = useState('');
 
-  // Preset demo test credentials for competition judging convenience
-  const handleTestPreset = async (type) => {
-    setLoading(true);
-    setVerificationResult(null);
-
-    const presets = {
-      VALID: {
-        id: "vc-ind-tourist-9042",
-        holderName: "Aarav Sharma",
-        idType: "Aadhaar Card",
-        idNumber: "IND-9874-3210",
-        nationality: "Indian",
-        validUntil: "2027-12-31",
-        issuer: "Incredible India Tourism Authority"
-      },
-      REVOKED: {
-        id: "vc-ind-revoked-001",
-        holderName: "Rajesh Varma (Flagged)",
-        idType: "Passport",
-        idNumber: "P-4492104-IND",
-        nationality: "Indian",
-        validUntil: "2026-10-15",
-        issuer: "Incredible India Tourism Authority"
-      },
-      TAMPERED: {
-        id: "vc-ind-tourist-9042",
-        holderName: "Aarav Sharma (FORGED ATTRIBUTES)",
-        idType: "Aadhaar Card",
-        idNumber: "IND-0000-0000-ALTERED",
-        nationality: "Indian",
-        validUntil: "2029-12-31",
-        issuer: "Incredible India Tourism Authority"
-      }
-    };
-
-    setScannedName(presets[type].holderName);
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/credentials/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(presets[type])
-      });
-      const data = await res.json();
-      setVerificationResult(data);
-    } catch (err) {
-      setVerificationResult({
-        status: 'INVALID',
-        message: 'Network verification check failed or offline mode triggered.',
-        computedHash: '0x8f4c2e5b9a71c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7',
-        storedHash: type === 'TAMPERED' ? null : '0x8f4c2e5b9a71c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7',
-        isRevoked: type === 'REVOKED',
-        tampered: type === 'TAMPERED'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleScanSuccess = async (text) => {
     setIsScannerOpen(false);
     setLoading(true);
@@ -176,49 +117,6 @@ export default function VerifierPortal() {
         >
           <Camera size={18} /> Scan with Camera
         </button>
-      </div>
-
-      {/* Quick Judge Demo Presets */}
-      <div 
-        className="neu-card"
-        style={{
-          padding: '14px 20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '12px',
-          background: 'rgba(16, 25, 44, 0.6)'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Sparkles size={16} color="var(--saffron)" />
-          <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-muted)' }}>Quick Competition Presets:</span>
-        </div>
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button 
-            onClick={() => handleTestPreset('VALID')} 
-            className="btn-ghost" 
-            style={{ fontSize: '0.78rem', background: 'rgba(16, 185, 129, 0.12)', color: '#34D399', border: '1px solid rgba(16, 185, 129, 0.3)' }}
-          >
-            ✅ Test Valid ID
-          </button>
-          <button 
-            onClick={() => handleTestPreset('REVOKED')} 
-            className="btn-ghost" 
-            style={{ fontSize: '0.78rem', background: 'rgba(245, 158, 11, 0.12)', color: '#FBBF24', border: '1px solid rgba(245, 158, 11, 0.3)' }}
-          >
-            ⚠️ Test Revoked ID
-          </button>
-          <button 
-            onClick={() => handleTestPreset('TAMPERED')} 
-            className="btn-ghost" 
-            style={{ fontSize: '0.78rem', background: 'rgba(239, 68, 68, 0.12)', color: '#F87171', border: '1px solid rgba(239, 68, 68, 0.3)' }}
-          >
-            ❌ Test Tampered ID
-          </button>
-        </div>
       </div>
 
       {/* Scanner Modal */}

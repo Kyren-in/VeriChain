@@ -172,7 +172,7 @@ export default function App() {
           </div>
 
           {/* Navigation Tabs & Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             
             {/* Desktop Navigation */}
             <nav 
@@ -188,7 +188,7 @@ export default function App() {
               }}
             >
               {/* Home button: ONLY visible when logged out (guest) */}
-              {!session && (
+              {!session ? (
                 <button
                   onClick={() => setActiveTab('landing')}
                   className={activeTab === 'landing' ? 'btn-saffron' : 'btn-ghost'}
@@ -196,55 +196,57 @@ export default function App() {
                 >
                   <Home size={16} /> Home
                 </button>
-              )}
+              ) : (
+                <>
+                  {/* Logged in role tabs */}
+                  {(userRole === 'user' || userRole === 'admin') && (
+                    <button
+                      onClick={() => setActiveTab('wallet')}
+                      className={activeTab === 'wallet' ? 'btn-primary' : 'btn-ghost'}
+                      style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+                    >
+                      <Wallet size={16} /> Holder Wallet
+                    </button>
+                  )}
 
-              {/* Verifier Terminal: Visible to verifiers, admins, and guests (demo), but NOT standard USER role */}
-              {(userRole === 'verifier' || userRole === 'admin' || !session) && (
-                <button
-                  onClick={() => setActiveTab('verifier')}
-                  className={activeTab === 'verifier' ? 'btn-primary' : 'btn-ghost'}
-                  style={{ padding: '8px 14px', fontSize: '0.84rem' }}
-                >
-                  <Scan size={16} /> Verifier Terminal
-                </button>
-              )}
+                  {(userRole === 'verifier' || userRole === 'admin') && (
+                    <button
+                      onClick={() => setActiveTab('verifier')}
+                      className={activeTab === 'verifier' ? 'btn-primary' : 'btn-ghost'}
+                      style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+                    >
+                      <Scan size={16} /> Verifier Terminal
+                    </button>
+                  )}
 
-              <button
-                onClick={() => setActiveTab('explorer')}
-                className={activeTab === 'explorer' ? 'btn-primary' : 'btn-ghost'}
-                style={{ padding: '8px 14px', fontSize: '0.84rem' }}
-              >
-                <Blocks size={16} /> Audit Explorer
-              </button>
+                  {(userRole === 'issuer' || userRole === 'admin') && (
+                    <button
+                      onClick={() => setActiveTab('issuer')}
+                      className={activeTab === 'issuer' ? 'btn-primary' : 'btn-ghost'}
+                      style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+                    >
+                      <UserCheck size={16} /> Issuer Portal
+                    </button>
+                  )}
 
-              {(userRole === 'user' || userRole === 'admin') && (
-                <button
-                  onClick={() => setActiveTab('wallet')}
-                  className={activeTab === 'wallet' ? 'btn-primary' : 'btn-ghost'}
-                  style={{ padding: '8px 14px', fontSize: '0.84rem' }}
-                >
-                  <Wallet size={16} /> Holder Wallet
-                </button>
-              )}
+                  <button
+                    onClick={() => setActiveTab('explorer')}
+                    className={activeTab === 'explorer' ? 'btn-primary' : 'btn-ghost'}
+                    style={{ padding: '8px 14px', fontSize: '0.84rem' }}
+                  >
+                    <Blocks size={16} /> Audit Explorer
+                  </button>
 
-              {(userRole === 'issuer' || userRole === 'admin') && (
-                <button
-                  onClick={() => setActiveTab('issuer')}
-                  className={activeTab === 'issuer' ? 'btn-primary' : 'btn-ghost'}
-                  style={{ padding: '8px 14px', fontSize: '0.84rem' }}
-                >
-                  <UserCheck size={16} /> Issuer Portal
-                </button>
-              )}
-
-              {userRole === 'admin' && (
-                <button
-                  onClick={() => setActiveTab('admin')}
-                  className={activeTab === 'admin' ? 'btn-primary' : 'btn-ghost'}
-                  style={{ padding: '8px 14px', fontSize: '0.84rem', color: '#F87171' }}
-                >
-                  <ShieldAlert size={16} /> Admin Panel
-                </button>
+                  {userRole === 'admin' && (
+                    <button
+                      onClick={() => setActiveTab('admin')}
+                      className={activeTab === 'admin' ? 'btn-primary' : 'btn-ghost'}
+                      style={{ padding: '8px 14px', fontSize: '0.84rem', color: '#F87171' }}
+                    >
+                      <ShieldAlert size={16} /> Admin Panel
+                    </button>
+                  )}
+                </>
               )}
             </nav>
 
@@ -252,7 +254,12 @@ export default function App() {
             {session ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button
-                  onClick={() => setActiveTab('wallet')}
+                  onClick={() => {
+                    if (userRole === 'admin') setActiveTab('admin');
+                    else if (userRole === 'issuer') setActiveTab('issuer');
+                    else if (userRole === 'verifier') setActiveTab('verifier');
+                    else setActiveTab('wallet');
+                  }}
                   className="badge-valid user-profile-btn"
                   style={{ 
                     textTransform: 'uppercase', 
@@ -264,7 +271,7 @@ export default function App() {
                     padding: '7px 12px', 
                     borderRadius: '10px' 
                   }}
-                  title="View Identity Wallet"
+                  title="View Account Role"
                 >
                   <User size={14} style={{ marginRight: '4px', color: 'var(--digital-blue-light)' }} />
                   <span className="profile-text">{userRole}</span>
@@ -276,24 +283,26 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              <button onClick={() => setIsAuthOpen(true)} className="btn-saffron" style={{ padding: '8px 16px', fontSize: '0.88rem' }}>
+              <button onClick={() => setIsAuthOpen(true)} className="btn-saffron" style={{ padding: '8px 14px', fontSize: '0.86rem', whiteSpace: 'nowrap' }}>
                 <LogIn size={15} /> Sign In
               </button>
             )}
 
-            {/* Mobile Hamburger Toggle */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="btn-secondary mobile-menu-btn"
-              style={{ padding: '8px 10px' }}
-            >
-              {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
+            {/* Mobile Hamburger Toggle: Only shown when logged in or has dropdown navigation */}
+            {session && (
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="btn-secondary mobile-menu-btn"
+                style={{ padding: '8px 10px' }}
+              >
+                {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu */}
-        {isMobileMenuOpen && (
+        {/* Mobile Dropdown Menu (Only shown for logged in users) */}
+        {session && isMobileMenuOpen && (
           <div
             style={{
               padding: '16px 20px',
@@ -304,34 +313,6 @@ export default function App() {
               gap: '8px'
             }}
           >
-            {!session && (
-              <button 
-                onClick={() => { setActiveTab('landing'); setIsMobileMenuOpen(false); }} 
-                className={activeTab === 'landing' ? 'btn-saffron' : 'btn-secondary'} 
-                style={{ width: '100%', justifyContent: 'flex-start' }}
-              >
-                <Home size={16} /> Home Landing
-              </button>
-            )}
-            
-            {(userRole === 'verifier' || userRole === 'admin' || !session) && (
-              <button 
-                onClick={() => { setActiveTab('verifier'); setIsMobileMenuOpen(false); }} 
-                className={activeTab === 'verifier' ? 'btn-primary' : 'btn-secondary'} 
-                style={{ width: '100%', justifyContent: 'flex-start' }}
-              >
-                <Scan size={16} /> Verifier Terminal
-              </button>
-            )}
-
-            <button 
-              onClick={() => { setActiveTab('explorer'); setIsMobileMenuOpen(false); }} 
-              className={activeTab === 'explorer' ? 'btn-primary' : 'btn-secondary'} 
-              style={{ width: '100%', justifyContent: 'flex-start' }}
-            >
-              <Blocks size={16} /> Audit Explorer
-            </button>
-
             {(userRole === 'user' || userRole === 'admin') && (
               <button 
                 onClick={() => { setActiveTab('wallet'); setIsMobileMenuOpen(false); }} 
@@ -339,6 +320,16 @@ export default function App() {
                 style={{ width: '100%', justifyContent: 'flex-start' }}
               >
                 <Wallet size={16} /> Holder Wallet
+              </button>
+            )}
+
+            {(userRole === 'verifier' || userRole === 'admin') && (
+              <button 
+                onClick={() => { setActiveTab('verifier'); setIsMobileMenuOpen(false); }} 
+                className={activeTab === 'verifier' ? 'btn-primary' : 'btn-secondary'} 
+                style={{ width: '100%', justifyContent: 'flex-start' }}
+              >
+                <Scan size={16} /> Verifier Terminal
               </button>
             )}
 
@@ -351,6 +342,14 @@ export default function App() {
                 <UserCheck size={16} /> Issuer Portal
               </button>
             )}
+
+            <button 
+              onClick={() => { setActiveTab('explorer'); setIsMobileMenuOpen(false); }} 
+              className={activeTab === 'explorer' ? 'btn-primary' : 'btn-secondary'} 
+              style={{ width: '100%', justifyContent: 'flex-start' }}
+            >
+              <Blocks size={16} /> Audit Explorer
+            </button>
 
             {userRole === 'admin' && (
               <button 
