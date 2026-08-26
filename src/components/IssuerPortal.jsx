@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   UserCheck, ShieldCheck, Hash, Sparkles, Calendar, Globe, 
-  CreditCard, Ban, Camera, Search, User, ShieldAlert, AlertTriangle, CheckCircle2, RotateCcw 
+  CreditCard, Ban, Camera, Search, User, ShieldAlert, AlertTriangle, CheckCircle2, RotateCcw, Trash2 
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { API_BASE_URL } from '../api';
@@ -146,26 +146,25 @@ export default function IssuerPortal({ onCredentialIssued }) {
     }
   };
 
-  // Execute On-Chain Revocation
-  const handleRevokeCredential = async (credId) => {
-    if (!window.confirm(`Are you sure you want to permanently revoke Credential ${credId} on the blockchain?`)) {
+  // Execute On-Chain Revocation for specific selected credential
+  const handleRevokeCredential = async (cred) => {
+    if (!window.confirm(`Are you sure you want to permanently revoke DID: ${cred.did} (Credential ${cred.id}) on the blockchain?`)) {
       return;
     }
 
-    setRevokingId(credId);
+    setRevokingId(cred.id);
     setRevokeMsg('');
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/credentials/revoke`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: credId, reason: revokeReason })
+        body: JSON.stringify({ id: cred.id, reason: revokeReason })
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setRevokeMsg(`Credential ${credId} has been successfully revoked and anchored to Polygon Amoy block #${data.block?.index}!`);
-        // Update local state to show revoked status
-        setUserCredentialsToRevoke(prev => prev.map(c => c.id === credId ? { ...c, isRevoked: true } : c));
+        setRevokeMsg(`Successfully revoked DID: ${cred.did} (Ref: ${cred.id}) and anchored to Polygon Amoy block #${data.block?.index}!`);
+        setUserCredentialsToRevoke(prev => prev.map(c => c.id === cred.id ? { ...c, isRevoked: true } : c));
       } else {
         setRevokeMsg(data.error || 'Failed to revoke credential.');
       }
@@ -636,19 +635,22 @@ export default function IssuerPortal({ onCredentialIssued }) {
                     </div>
                   </div>
 
-                  <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '14px', display: 'flex', justifyContent: 'flex-end' }}>
+                  <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <span className="mono-text" style={{ fontSize: '0.74rem', color: 'var(--text-dim)' }}>
+                      Target: {cred.did}
+                    </span>
                     {cred.isRevoked ? (
                       <span style={{ fontSize: '0.8rem', color: '#FBBF24', fontWeight: '700' }}>
-                        Revocation Already Anchored On-Chain
+                        Revocation Anchored On-Chain
                       </span>
                     ) : (
                       <button
-                        onClick={() => handleRevokeCredential(cred.id)}
+                        onClick={() => handleRevokeCredential(cred)}
                         disabled={revokingId === cred.id}
                         className="btn-saffron"
                         style={{ background: '#DC2626', padding: '9px 18px', fontSize: '0.85rem' }}
                       >
-                        {revokingId === cred.id ? 'Revoking On-Chain...' : <><Ban size={15} /> Revoke Credential</>}
+                        {revokingId === cred.id ? 'Revoking On-Chain...' : <><Trash2 size={15} /> Revoke This DID</>}
                       </button>
                     )}
                   </div>
