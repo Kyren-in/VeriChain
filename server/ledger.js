@@ -19,10 +19,24 @@ class BlockchainLedger {
 
   async loadFromSupabase() {
     try {
-      // 1. Fetch blocks from Supabase 'blocks' table
+      // Ensure Genesis Block 0 exists in Supabase
+      const genesis = this.createGenesisBlock();
+      await supabase.from('blocks').upsert({
+        index: 0,
+        timestamp: genesis.timestamp,
+        action: genesis.action,
+        credential_id: null,
+        credential_hash: genesis.credentialHash,
+        did: genesis.did,
+        previous_hash: genesis.previousHash,
+        hash: genesis.hash
+      }, { onConflict: 'index' });
+
+      // 1. Fetch all blocks from Supabase 'blocks' table
       const { data: dbBlocks } = await supabase.from('blocks').select('*').order('index', { ascending: true });
       if (dbBlocks && dbBlocks.length > 0) {
-        this.chain = dbBlocks.map(b => ({
+        // Guarantee Genesis block 0 is at the start
+        const mappedBlocks = dbBlocks.map(b => ({
           index: b.index,
           timestamp: b.timestamp,
           action: b.action,
@@ -32,6 +46,15 @@ class BlockchainLedger {
           previousHash: b.previous_hash,
           hash: b.hash
         }));
+
+        const hasGenesis = mappedBlocks.some(b => b.index === 0);
+        if (!hasGenesis) {
+          this.chain = [genesis, ...mappedBlocks];
+        } else {
+          this.chain = mappedBlocks;
+        }
+      } else {
+        this.chain = [genesis];
       }
 
       // 2. Fetch credentials from Supabase 'issued_credentials' table
