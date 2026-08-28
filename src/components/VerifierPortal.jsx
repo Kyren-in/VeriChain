@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Scan, ShieldCheck, ShieldAlert, AlertOctagon, Camera, FileJson, Sparkles, CheckCircle2, Lock, Cpu, RotateCcw } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Scan, ShieldCheck, ShieldAlert, AlertOctagon, Camera, FileJson, Sparkles, CheckCircle2, Lock, Cpu, RotateCcw, Image, Upload } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
 import QrScannerModal from './QrScannerModal';
 import { API_BASE_URL } from '../api';
 
@@ -8,12 +9,15 @@ export default function VerifierPortal() {
   const [loading, setLoading] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedName, setScannedName] = useState('');
+  const [uploadError, setUploadError] = useState('');
+  const galleryInputRef = useRef(null);
 
   const handleScanSuccess = async (text) => {
     setIsScannerOpen(false);
     setLoading(true);
     setVerificationResult(null);
     setScannedName('');
+    setUploadError('');
 
     try {
       const parsed = JSON.parse(text);
@@ -37,6 +41,29 @@ export default function VerifierPortal() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDirectGalleryUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadError('');
+    setLoading(true);
+    setVerificationResult(null);
+
+    try {
+      const html5QrCode = new Html5Qrcode("verifier-direct-file-decoder");
+      const decodedText = await html5QrCode.scanFile(file, true);
+      await handleScanSuccess(decodedText);
+    } catch (err) {
+      console.error("Direct file scan failed:", err);
+      setLoading(false);
+      setUploadError('No valid QR code detected in the selected image. Please ensure the image contains a clear VeriChain QR code.');
+    } finally {
+      if (galleryInputRef.current) {
+        galleryInputRef.current.value = '';
+      }
     }
   };
 
@@ -105,19 +132,42 @@ export default function VerifierPortal() {
           </div>
         </div>
 
-        {/* Scan Button */}
-        <button
-          onClick={() => {
-            setVerificationResult(null);
-            setScannedName('');
-            setIsScannerOpen(true);
-          }}
-          className="btn-saffron"
-          style={{ padding: '12px 24px', fontSize: '0.95rem', whiteSpace: 'nowrap' }}
-        >
-          <Camera size={18} /> Scan with Camera
-        </button>
+        {/* Scan & Upload Action Buttons */}
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <input
+            type="file"
+            ref={galleryInputRef}
+            accept="image/*"
+            onChange={handleDirectGalleryUpload}
+            style={{ display: 'none' }}
+          />
+          <button
+            onClick={() => galleryInputRef.current?.click()}
+            disabled={loading}
+            className="btn-primary"
+            style={{ padding: '12px 20px', fontSize: '0.92rem', whiteSpace: 'nowrap' }}
+          >
+            <Image size={18} /> Upload from Gallery
+          </button>
+
+          <button
+            onClick={() => {
+              setVerificationResult(null);
+              setScannedName('');
+              setUploadError('');
+              setIsScannerOpen(true);
+            }}
+            disabled={loading}
+            className="btn-saffron"
+            style={{ padding: '12px 20px', fontSize: '0.92rem', whiteSpace: 'nowrap' }}
+          >
+            <Camera size={18} /> Scan with Camera
+          </button>
+        </div>
       </div>
+
+      {/* Hidden decoding container */}
+      <div id="verifier-direct-file-decoder" style={{ display: 'none' }}></div>
 
       {/* Scanner Modal */}
       <QrScannerModal
@@ -125,6 +175,25 @@ export default function VerifierPortal() {
         onClose={() => setIsScannerOpen(false)}
         onScanSuccess={handleScanSuccess}
       />
+
+      {uploadError && (
+        <div
+          style={{
+            padding: '16px 20px',
+            borderRadius: '16px',
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            color: '#FCA5A5',
+            fontSize: '0.9rem'
+          }}
+        >
+          <ShieldAlert size={22} color="#F87171" style={{ flexShrink: 0 }} />
+          <span>{uploadError}</span>
+        </div>
+      )}
 
       {/* Result Display Area */}
       <div 
