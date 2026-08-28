@@ -204,7 +204,7 @@ export default function HeroIdentityBadge() {
 
       {/* Floating Auxiliary Widget 1: Instant Check-in Badge */}
       <div
-        className="clay-card"
+        className="clay-card animate-float-alt"
         style={{
           position: 'absolute',
           top: '-18px',
@@ -228,7 +228,7 @@ export default function HeroIdentityBadge() {
 
       {/* Floating Auxiliary Widget 2: Node Synchronization */}
       <div
-        className="clay-card"
+        className="clay-card animate-float-lag"
         style={{
           position: 'absolute',
           bottom: '-16px',

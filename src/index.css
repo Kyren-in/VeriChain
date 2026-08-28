@@ -394,6 +394,16 @@ h1, h2, h3, h4, h5, h6 {
   50% { transform: translateY(-8px); }
 }
 
+@keyframes floatSmoothAlt {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+}
+
+@keyframes floatSmoothLag {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(8px) rotate(-1deg); }
+}
+
 @keyframes scanLine {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(260px); }
@@ -410,6 +420,14 @@ h1, h2, h3, h4, h5, h6 {
 
 .animate-float {
   animation: floatSmooth 4s infinite ease-in-out;
+}
+
+.animate-float-alt {
+  animation: floatSmoothAlt 3.6s infinite ease-in-out;
+}
+
+.animate-float-lag {
+  animation: floatSmoothLag 4.4s infinite ease-in-out;
 }
 
 .scan-beam {

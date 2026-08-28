@@ -17,6 +17,7 @@ export default function HolderWallet({ user }) {
   const [privacyMode, setPrivacyMode] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [settingsMsg, setSettingsMsg] = useState('');
   const [selfRevokeStep, setSelfRevokeStep] = useState(1);
   const [selfRevokeOtp, setSelfRevokeOtp] = useState('');
@@ -247,13 +248,37 @@ export default function HolderWallet({ user }) {
 
             <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '22px' }}>
               <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reset Account Password</label>
-              <input
-                type="password"
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="input-field"
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  placeholder="Enter new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="input-field"
+                  style={{ paddingRight: '40px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    color: showNewPassword ? 'var(--digital-blue-light)' : 'var(--text-dim)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '4px'
+                  }}
+                  title={showNewPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
               <button type="submit" className="btn-primary" style={{ padding: '10px', justifyContent: 'center' }}>
                 <KeyRound size={16} /> Update Password
               </button>
