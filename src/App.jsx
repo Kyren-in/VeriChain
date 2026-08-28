@@ -127,7 +127,7 @@ export default function App() {
         <div style={{ maxWidth: '1320px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#FCD34D', fontWeight: '700' }}>
-              🇮🇳 Official GovTech Portal
+              Official GovTech Portal
             </span>
             <span style={{ color: 'var(--text-dim)' }}>|</span>
             <span style={{ color: 'var(--text-muted)' }}>Ministry of Tourism & Cybersecurity Initiative</span>
