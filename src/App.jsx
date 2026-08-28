@@ -9,7 +9,7 @@ import AuthModal from './components/AuthModal';
 import { supabase } from './lib/supabaseClient';
 import { 
   Shield, UserCheck, Wallet, Scan, Blocks, Lock, LogIn, LogOut, 
-  User, Menu, X, ShieldAlert, Sparkles, Home, ChevronRight 
+  User, Menu, X, ShieldAlert, Sparkles, Home, ChevronRight, Mail, FileText, AlertCircle
 } from 'lucide-react';
 
 const ADMIN_EMAIL = 'jyotirmay_das@outlook.com';
@@ -20,6 +20,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('landing'); // 'landing' default for public presentation
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [accessAlert, setAccessAlert] = useState(null); // stores message if unauthorized attempt occurs
 
   useEffect(() => {
     const fetchUserRole = async (user) => {
@@ -86,6 +87,27 @@ export default function App() {
     await supabase.auth.signOut();
     setUserRole('guest');
     setActiveTab('landing');
+  };
+
+  const handleProtectedNavigate = (targetTab) => {
+    if (!session) {
+      setAccessAlert("Without login or registration you don't have permission to view this portal. Please sign in or create an account to proceed.");
+      return;
+    }
+    // Check specific role restrictions if needed
+    if (targetTab === 'admin' && userRole !== 'admin') {
+      setAccessAlert("You do not have Administrator permissions to access the Admin Panel.");
+      return;
+    }
+    if (targetTab === 'issuer' && userRole !== 'issuer' && userRole !== 'admin') {
+      setAccessAlert("Access restricted. Only authorized Government & Issuer Authorities can access this portal.");
+      return;
+    }
+    if (targetTab === 'verifier' && userRole !== 'verifier' && userRole !== 'issuer' && userRole !== 'admin') {
+      setAccessAlert("Access restricted. Only verified Hotel / Checkpoint Terminals can access this module.");
+      return;
+    }
+    setActiveTab(targetTab);
   };
 
   return (
@@ -406,7 +428,7 @@ export default function App() {
       <main style={{ flex: 1, maxWidth: '1320px', width: '100%', margin: '0 auto', padding: '36px 24px' }}>
         {activeTab === 'landing' && (
           <LandingPage 
-            onNavigateTab={(tab) => setActiveTab(tab)} 
+            onNavigateTab={(tab) => handleProtectedNavigate(tab)} 
             onOpenAuth={() => setIsAuthOpen(true)} 
           />
         )}
@@ -430,6 +452,86 @@ export default function App() {
           else setActiveTab('wallet');
         }} 
       />
+
+      {/* Access Permission Alert Dialog */}
+      {accessAlert && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px'
+          }}
+        >
+          <div 
+            className="clay-card animate-float-alt" 
+            style={{
+              maxWidth: '460px',
+              width: '100%',
+              padding: '28px',
+              borderRadius: '24px',
+              background: 'linear-gradient(145deg, rgba(24, 34, 58, 0.98) 0%, rgba(13, 20, 36, 0.98) 100%)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              boxShadow: '0 20px 45px rgba(0, 0, 0, 0.7), 0 0 30px rgba(239, 68, 68, 0.2)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', marginBottom: '16px' }}>
+              <div 
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '14px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}
+              >
+                <ShieldAlert size={26} color="#F87171" />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#FFFFFF', marginBottom: '4px' }}>
+                  Access Permission Required
+                </h3>
+                <span className="clay-badge-saffron" style={{ fontSize: '0.62rem', padding: '2px 8px' }}>
+                  Authentication Guard
+                </span>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '0.92rem', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '24px' }}>
+              {accessAlert}
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setAccessAlert(null)}
+                className="btn-secondary"
+                style={{ padding: '10px 18px', fontSize: '0.85rem' }}
+              >
+                Dismiss
+              </button>
+              <button
+                onClick={() => {
+                  setAccessAlert(null);
+                  setIsAuthOpen(true);
+                }}
+                className="btn-saffron"
+                style={{ padding: '10px 22px', fontSize: '0.85rem' }}
+              >
+                <LogIn size={15} /> Sign In / Register
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Comprehensive Enterprise GovTech Footer */}
       <footer 
@@ -463,7 +565,7 @@ export default function App() {
                 Self-Sovereign Decentralized Identity Platform bridging physical travel IDs and zero-knowledge cryptographic verification for a safer Digital India.
               </p>
 
-              <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.72rem', background: 'rgba(255, 138, 61, 0.12)', color: 'var(--saffron)', padding: '3px 8px', borderRadius: '8px', border: '1px solid rgba(255, 138, 61, 0.25)' }}>
                   Incredible India
                 </span>
@@ -500,25 +602,64 @@ export default function App() {
                 Platform Modules
               </h4>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                <li style={{ cursor: 'pointer' }} onClick={() => setActiveTab('wallet')}>📱 Citizen Digital Identity Wallet</li>
-                <li style={{ cursor: 'pointer' }} onClick={() => setActiveTab('verifier')}>🏨 Hotel & Checkpoint Verifier Terminal</li>
-                <li style={{ cursor: 'pointer' }} onClick={() => setActiveTab('issuer')}>🏛️ Authority Verifiable Credential Issuer</li>
-                <li style={{ cursor: 'pointer' }} onClick={() => setActiveTab('explorer')}>⛓️ Public Audit Ledger & Block Explorer</li>
+                <li style={{ cursor: 'pointer' }} onClick={() => handleProtectedNavigate('wallet')}>📱 Citizen Digital Identity Wallet</li>
+                <li style={{ cursor: 'pointer' }} onClick={() => handleProtectedNavigate('verifier')}>🏨 Hotel & Checkpoint Verifier Terminal</li>
+                <li style={{ cursor: 'pointer' }} onClick={() => handleProtectedNavigate('issuer')}>🏛️ Authority Verifiable Credential Issuer</li>
+                <li style={{ cursor: 'pointer' }} onClick={() => handleProtectedNavigate('explorer')}>⛓️ Public Audit Ledger & Block Explorer</li>
               </ul>
             </div>
 
-            {/* Column 4: Institutional Acknowledgments */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Column 4: Team Larpthon & Support Links */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <h4 style={{ fontSize: '0.88rem', fontWeight: '700', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Competition Team
               </h4>
               <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                Lead Developer & Architect: <br />
-                <strong style={{ color: '#FFFFFF' }}>Jyotirmay Das (Kyren-in) & Team</strong>
+                Hackathon Team: <br />
+                <strong style={{ color: '#FFFFFF', fontSize: '0.95rem' }}>Team Larpthon</strong>
               </p>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
                 Smart India Hackathon (SIH) 2026 — Track: Blockchain / Digital Identity / Cybersecurity
               </p>
+
+              {/* Support & Feedback Links */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px', borderTop: '1px solid var(--border-subtle)', paddingTop: '10px' }}>
+                <a 
+                  href="mailto:verichain.support@gmail.com" 
+                  style={{ 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: '6px', 
+                    color: 'var(--digital-blue-light)', 
+                    fontSize: '0.8rem', 
+                    textDecoration: 'none',
+                    transition: 'color 0.2s ease'
+                  }}
+                  title="Contact Support"
+                >
+                  <Mail size={14} color="#60A5FA" />
+                  <span>verichain.support@gmail.com</span>
+                </a>
+
+                <a 
+                  href="https://forms.gle/VVRNp3ZYeNV6nrbs5" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: '6px', 
+                    color: '#FCD34D', 
+                    fontSize: '0.8rem', 
+                    textDecoration: 'none',
+                    transition: 'color 0.2s ease'
+                  }}
+                  title="Submit Feedback"
+                >
+                  <FileText size={14} color="#FCD34D" />
+                  <span>Support & Feedback Form</span>
+                </a>
+              </div>
             </div>
 
           </div>
@@ -526,7 +667,7 @@ export default function App() {
           {/* Bottom Copyright & Security Strip */}
           <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
-              © 2026 Jyotirmay Das (Kyren-in) & Team. All Rights Reserved. Built for Smart India Hackathon 2026.
+              © 2026 Team Larpthon. All Rights Reserved. Built for Smart India Hackathon 2026.
             </div>
 
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center', fontSize: '0.78rem' }}>
