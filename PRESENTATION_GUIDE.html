@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeriChain — Presentation Master Guide & Codebase Bible</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+    :root {
+      --saffron: #FF8A3D;
+      --navy: #0B1220;
+      --blue: #2563EB;
+      --green: #168A5B;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --border: #E2E8F0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 48px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      border: 1px solid var(--border);
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .tricolor-line {
+      height: 6px;
+      background: linear-gradient(90deg, #FF8A3D 0%, #FFFFFF 50%, #168A5B 100%);
+      border-radius: 4px;
+      margin-bottom: 24px;
+    }
+
+    h1 { font-size: 2.2rem; color: #0F172A; font-weight: 800; line-height: 1.2; }
+    h2 { font-size: 1.45rem; color: var(--blue); margin-top: 36px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; font-weight: 700; }
+    h3 { font-size: 1.15rem; color: #334155; margin-top: 24px; margin-bottom: 10px; font-weight: 700; }
+    p { margin-bottom: 14px; color: #334155; font-size: 1rem; }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-saffron { background: rgba(255, 138, 61, 0.15); color: #C2410C; border: 1px solid rgba(255, 138, 61, 0.3); }
+    .badge-blue { background: rgba(37, 99, 235, 0.15); color: #1D4ED8; border: 1px solid rgba(37, 99, 235, 0.3); }
+
+    .callout {
+      background: #F1F5F9;
+      border-left: 4px solid var(--blue);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+      font-style: italic;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.92rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      text-align: left;
+    }
+    th { background: #F8FAFC; color: #0F172A; font-weight: 700; }
+    tr:nth-child(even) { background: #FAFAFA; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #F1F5F9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      color: #0F172A;
+    }
+
+    .qa-box {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 18px;
+    }
+    .qa-q { font-weight: 700; color: #0F172A; margin-bottom: 8px; font-size: 1.05rem; }
+    .qa-a { color: #334155; }
+
+    .print-btn {
+      background: var(--blue);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .print-btn:hover { background: #1D4ED8; }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .container { border: none; box-shadow: none; padding: 0; }
+      .print-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="tricolor-line"></div>
+
+    <div class="header-bar">
+      <div>
+        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+          <span class="badge badge-saffron">Smart India Hackathon 2026</span>
+          <span class="badge badge-blue">GovTech & DID</span>
+        </div>
+        <h1>VeriChain — Presentation Master Guide</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Author: Jyotirmay Das (Kyren-in) & Team</p>
+      </div>
+      <button class="print-btn" onclick="window.print()">🖨️ Save as PDF / Print</button>
+    </div>
+
+    <h2>1. 30-Second Elevator Pitch (Memorize This!)</h2>
+    <div class="callout">
+      "Good morning respected judges. Current hotel check-ins and transit checkpoints rely on physical ID photocopies or central databases—causing frequent privacy leaks, identity theft, and fake ID fraud.<br><br>
+      <strong>VeriChain</strong> is a <strong>Self-Sovereign Decentralized Identity (DID) Platform</strong> built for Indian GovTech and Tourism. It implements <strong>Zero Raw PII on-chain</strong> in full compliance with the <strong>DPDP Act, 2023</strong>.<br><br>
+      When an authority issues a credential, only its <strong>deterministic SHA-256 cryptographic hash</strong> is anchored to the blockchain. The citizen holds the raw ID in their private wallet. When checking in at a hotel, the verifier scans a dynamic QR code, calculates the hash in real-time, and validates it against the blockchain in <strong>under 100ms with zero data leakage</strong>."
+    </div>
+
+    <h2>2. Executive Problem & Solution</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>The Real-World Problem</th>
+          <th>VeriChain's Architectural Solution</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Identity Theft & Photocopy Leaks:</strong> Physical Aadhaar/Passport copies left at hotel front desks get stolen or misused.</td>
+          <td><strong>Zero Raw PII On-Chain:</strong> Raw data stays exclusively on the citizen's device. Only mathematical hash commitments exist on the ledger.</td>
+        </tr>
+        <tr>
+          <td><strong>Forged & Altered IDs:</strong> Fake IDs and altered PDFs are easy to produce with basic photo editing.</td>
+          <td><strong>Deterministic Hash Matching:</strong> Modifying even 1 digit in an Aadhaar number changes the SHA-256 hash completely (avalanche effect), triggering an instant <strong>Tamper Detected</strong> alert.</td>
+        </tr>
+        <tr>
+          <td><strong>Central Database Vulnerabilities:</strong> Central servers are single points of failure prone to insider tampering.</td>
+          <td><strong>Immutable Blockchain Ledger:</strong> Blocks are cryptographically chained with previous hashes on Polygon Amoy EVM testnet, preventing silent alterations.</td>
+        </tr>
+        <tr>
+          <td><strong>Slow Revocation:</strong> Revoking a compromised tourist pass or national ID takes days across disparate databases.</td>
+          <td><strong>Instant On-Chain Revocation:</strong> Authorities or citizens can broadcast instant <code>CREDENTIAL_REVOKED</code> blocks to blacklist compromised credentials in real-time.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Complete File & Function Guide</h2>
+    <h3>Backend Engine (<code>server/</code>)</h3>
+    <ul>
+      <li><code>server/ledger.js</code>:
+        <ul>
+          <li><code>computeCredentialHash(payload)</code>: Sorts all JSON keys alphabetically (<code>Object.keys().sort()</code>) and generates a deterministic SHA-256 hash.</li>
+          <li><code>issueCredential(credential)</code>: Generates <code>did:verichain:xxx</code>, computes hash, mines a <code>CREDENTIAL_ISSUED</code> block, and saves to chain & Supabase.</li>
+          <li><code>revokeCredential(id, reason)</code>: Adds credential ID to revocation set and mines a <code>CREDENTIAL_REVOKED</code> block.</li>
+          <li><code>verifyCredential(payload)</code>: Hashes scanned QR payload, checks revocation list, finds issue block, and verifies <code>computedHash === storedHash</code>.</li>
+        </ul>
+      </li>
+      <li><code>server/index.js</code>:
+        <ul>
+          <li><code>rateLimiter</code>: Limits requests to 30 req/min per IP to prevent credential brute-forcing.</li>
+          <li><code>POST /api/auth/send-otp</code> & <code>/api/auth/verify-otp</code>: Dispatches 6-digit verification code via Brevo Email API with account lockout protection.</li>
+          <li><code>POST /api/credentials/issue</code>, <code>/verify</code>, <code>/revoke</code>: Core API endpoints.</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h3>Frontend Interface (<code>src/components/</code>)</h3>
+    <ul>
+      <li><code>LandingPage.jsx</code>: SIH Presentation dashboard with an <strong>Interactive Verification Playground</strong> for judges.</li>
+      <li><code>HolderWallet.jsx</code>: Citizen digital wallet with dynamic QR generation, Active/Revoked/Expired tabs, Privacy Mode masking, and Self-Revocation.</li>
+      <li><code>IssuerPortal.jsx</code>: GovTech authority desk to issue verifiable DIDs and revoke credentials by citizen email.</li>
+      <li><code>VerifierPortal.jsx</code>: Live camera QR scanner and instant cryptographic validation display.</li>
+      <li><code>BlockchainExplorer.jsx</code>: Public live audit ledger stream showing blocks, headers, and previous hash linkage.</li>
+      <li><code>AdminPortal.jsx</code>: Master Admin governance panel to assign and change user roles in real time.</li>
+    </ul>
+
+    <h2>4. 5-Minute Live Presentation Script</h2>
+    <ol style="margin-left: 20px; color: #334155; line-height: 1.8;">
+      <li><strong>Min 0:00 - 1:00 (Problem & Vision):</strong> Open Landing Page. Explain the issue of physical ID xerox fraud and privacy breaches at Indian hotels and transit checkpoints.</li>
+      <li><strong>Min 1:00 - 2:00 (Interactive Simulator):</strong> Scroll down to the Verification Playground on the Landing Page. Click <strong>Valid Credential</strong> (shows Green pass). Click <strong>Tampered Attack</strong> (shows instant Red tamper detection to judges).</li>
+      <li><strong>Min 2:00 - 3:00 (Issuer Portal):</strong> Sign in as Issuer. Issue a new Tourist ID for a citizen. Show how the transaction hash is generated and anchored.</li>
+      <li><strong>Min 3:00 - 4:00 (Holder Wallet & Verifier Terminal):</strong> Switch to Citizen Wallet & show the newly issued pass and dynamic QR code. Switch to Verifier Terminal & scan the QR code live.</li>
+      <li><strong>Min 4:00 - 5:00 (Blockchain Explorer & Conclusion):</strong> Show the Blockchain Explorer displaying the live block stream, emphasize <strong>Zero Raw PII</strong> and <strong>DPDP Act compliance</strong>.</li>
+    </ol>
+
+    <h2>5. Top Judge Questions & Winning Answers</h2>
+
+    <div class="qa-box">
+      <div class="qa-q">Q1: "Why use blockchain instead of a standard SQL database?"</div>
+      <div class="qa-a"><strong>Answer:</strong> In a standard database, any database admin or hacker with SQL access can silently alter records without a trace. In VeriChain, each credential issue and revocation is an immutable, cryptographically chained block linked to the previous block's SHA-256 header hash. Modifying any past record breaks the mathematical hash chain.</div>
+    </div>
+
+    <div class="qa-box">
+      <div class="qa-q">Q2: "How do you handle Indian data privacy and DPDP Act 2023 compliance?"</div>
+      <div class="qa-a"><strong>Answer:</strong> VeriChain enforces <strong>Zero Raw PII On-Chain</strong>. The citizen's personal data (Aadhaar, Passport, Name) never touches the blockchain. Only the 64-character SHA-256 hash digest is stored. Because SHA-256 is a one-way mathematical function, citizen data can never be reverse-engineered from the blockchain.</div>
+    </div>
+
+    <div class="qa-box">
+      <div class="qa-q">Q3: "What happens if a tourist alters their Aadhaar number on their phone?"</div>
+      <div class="qa-a"><strong>Answer:</strong> Changing even a single digit changes the SHA-256 hash completely due to the avalanche effect. When the hotel scanner recalculates the hash of the presented QR payload, it will mismatch the on-chain hash, immediately raising a <strong>'SECURITY ALERT: TAMPER DETECTED'</strong> warning.</div>
+    </div>
+
+    <div class="qa-box">
+      <div class="qa-q">Q4: "How does Revocation work if blockchain is immutable?"</div>
+      <div class="qa-a"><strong>Answer:</strong> We do not delete old blocks. Instead, when an authority or citizen revokes a credential, a new <code>CREDENTIAL_REVOKED</code> block transaction is mined onto the ledger and the ID is added to the active revocation registry. When verifying, the verifier checks both hash validity AND the revocation status.</div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem;">
+      © 2026 Jyotirmay Das (Kyren-in) & Team • Smart India Hackathon 2026
+    </div>
+  </div>
+
+</body>
+</html>
