@@ -16,13 +16,23 @@ import {
   Blocks,
   Crown
 } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useApp, canAccessRoute, normalizeRole } from '../context/AppContext';
 import ThemeToggle from './ThemeToggle';
+import { Lock } from 'lucide-react';
 
 export default function Sidebar() {
   const { currentRoute, navigateTo, userProfile, isAuthenticated, logout } = useApp();
 
-  const isAdmin = userProfile?.role?.toLowerCase().includes('admin');
+  const activeRole = normalizeRole(userProfile?.role);
+  const isAdmin = activeRole === 'admin';
+
+  const roleDisplayNames = {
+    guest: 'Guest',
+    user: 'Citizen',
+    verifier: 'Hotel Verifier',
+    issuer: 'Govt Issuer',
+    admin: 'Platform Admin'
+  };
 
   const navSections = [
     {
@@ -89,6 +99,7 @@ export default function Sidebar() {
                 const isActive = currentRoute === item.id || 
                   (item.id === 'credentials' && currentRoute === 'credential-detail') ||
                   (item.id === 'verify' && currentRoute === 'verification-result');
+                const isPermitted = canAccessRoute(userProfile?.role, isAuthenticated, item.id);
 
                 return (
                   <li key={item.id}>
@@ -96,9 +107,21 @@ export default function Sidebar() {
                       type="button"
                       onClick={() => navigateTo(item.id)}
                       className={`nav-item-btn ${isActive ? 'active' : ''}`}
+                      style={{
+                        opacity: isPermitted ? 1 : 0.65,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        width: '100%'
+                      }}
                     >
-                      <Icon size={18} className="nav-icon" />
-                      <span>{item.label}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Icon size={18} className="nav-icon" />
+                        <span>{item.label}</span>
+                      </div>
+                      {!isPermitted && (
+                        <Lock size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                      )}
                     </button>
                   </li>
                 );
@@ -129,7 +152,7 @@ export default function Sidebar() {
               <div className="user-info-name">{isAuthenticated ? (userProfile?.name || 'Citizen') : 'Guest User'}</div>
               <div className="user-info-role">
                 <Shield size={11} />
-                <span>{isAuthenticated ? (userProfile?.role || 'Verified Holder') : 'Sign In'}</span>
+                <span>{isAuthenticated ? (roleDisplayNames[activeRole] || 'Citizen') : 'Guest / Sign In'}</span>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ThemeProvider } from './context/ThemeContext';
-import { AppProvider, useApp } from './context/AppContext';
+import { AppProvider, useApp, canAccessRoute } from './context/AppContext';
 import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -20,22 +20,19 @@ import ActivityView from './components/ActivityView';
 import LoginView from './components/LoginView';
 import BlockchainExplorer from './components/BlockchainExplorer';
 import AdminPortal from './components/AdminPortal';
+import AccessDeniedView from './components/AccessDeniedView';
 
 function AppContent() {
   const { currentRoute, isAuthenticated, userProfile } = useApp();
 
-  const publicRoutes = ['landing', 'how-it-works', 'login', 'verify', 'verification-result', 'explorer', 'blockchain'];
+  // Enforce granular RBAC matrix synchronized with Supabase
+  const isAllowed = canAccessRoute(userProfile?.role, isAuthenticated, currentRoute);
 
-  if (!isAuthenticated && !publicRoutes.includes(currentRoute)) {
-    return <LoginView />;
-  }
-
-  // Admin route protection
-  if (currentRoute === 'admin') {
-    const isAdmin = userProfile?.role?.toLowerCase().includes('admin');
-    if (!isAdmin) {
-      return <Dashboard />;
+  if (!isAllowed) {
+    if (!isAuthenticated) {
+      return <LoginView />;
     }
+    return <AccessDeniedView currentRoute={currentRoute} />;
   }
 
   switch (currentRoute) {

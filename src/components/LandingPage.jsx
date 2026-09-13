@@ -9,9 +9,7 @@ import {
   EyeOff, 
   ChevronRight, 
   Building, 
-  GraduationCap, 
-  Plane, 
-  HeartPulse,
+  GraduationCap,
   CheckCircle2,
   AlertTriangle,
   XCircle,
@@ -20,11 +18,16 @@ import {
   Terminal,
   Sparkles,
   Hash,
-  Copy,
-  Check
+  Copy, 
+  Check,
+  Crown,
+  Camera,
+  Wallet,
+  Blocks,
+  Database
 } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { Button, Badge, Card } from './ui';
+import { useApp, normalizeRole } from '../context/AppContext';
+import { Button, Badge } from './ui';
 
 // SIH 2026 Presentation Simulator Scenarios (Minute 1:00 - 2:00 Live Demo)
 const SCENARIOS = {
@@ -89,9 +92,10 @@ const SCENARIOS = {
 };
 
 export default function LandingPage() {
-  const { navigateTo, credentials, isAuthenticated } = useApp();
+  const { navigateTo, isAuthenticated, userProfile, changeUserRole } = useApp();
 
   const [activeScenarioKey, setActiveScenarioKey] = useState('valid');
+  const [selectedMatrixRole, setSelectedMatrixRole] = useState(null);
   const [simPayload, setSimPayload] = useState(SCENARIOS.valid.payload);
   const [computedHash, setComputedHash] = useState('');
   const [validAnchorHash, setValidAnchorHash] = useState('');
@@ -489,102 +493,359 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* SECTION 3: Live Credentials Showcase */}
-      <section>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <h3 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-              Verifiable Credentials Portfolio
-            </h3>
-            <p style={{ fontSize: '0.86rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-              Explore the five reference credentials included in the demonstration suite.
-            </p>
+      {/* SECTION 3: 6. Role-Based Access Control (RBAC) Matrix */}
+      <section id="rbac-matrix" style={{ scrollMarginTop: '80px' }}>
+        <div style={{ textAlign: 'center', maxWidth: '820px', margin: '0 auto 32px' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 16px',
+              borderRadius: 'var(--radius-full)',
+              background: 'rgba(37, 99, 235, 0.12)',
+              color: 'var(--brand-royal-blue)',
+              fontSize: '0.8rem',
+              fontWeight: '700',
+              marginBottom: '12px',
+              border: '1px solid rgba(37, 99, 235, 0.25)'
+            }}
+          >
+            <Shield size={14} />
+            <span>Security Architecture & Governance</span>
           </div>
 
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => navigateTo('credentials')}
-            icon={ChevronRight}
-            iconPosition="right"
-          >
-            View All in Wallet
-          </Button>
+          <h3 style={{ fontSize: '1.85rem', fontWeight: '900', color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: '8px' }}>
+            6. Role-Based Access Control (RBAC) Matrix
+          </h3>
+          <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+            Granular access permissions dynamically governed by verified identities and synchronized with the Supabase database. Operational modules adapt instantly based on cryptographically verified roles.
+          </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-          {credentials.map((cred) => {
-            const isRevoked = cred.status === 'Revoked';
-            return (
-              <Card 
-                key={cred.id}
-                variant="interactive"
-                onClick={() => navigateTo('credential-detail', { credentialId: cred.id })}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '14px',
-                  border: isRevoked ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border-default)'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div 
-                      style={{
-                        width: '38px',
-                        height: '38px',
-                        borderRadius: 'var(--radius-md)',
-                        background: isRevoked ? 'rgba(239, 68, 68, 0.12)' : 'rgba(37, 99, 235, 0.12)',
-                        color: isRevoked ? 'var(--brand-danger)' : 'var(--brand-royal-blue)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                      }}
-                    >
-                      {cred.iconType === 'academic' && <GraduationCap size={18} />}
-                      {cred.iconType === 'passport' && <Plane size={18} />}
-                      {cred.iconType === 'building' && <Building size={18} />}
-                      {cred.iconType === 'health' && <HeartPulse size={18} />}
-                      {cred.iconType === 'id-card' && <Shield size={18} />}
-                    </div>
-                    <div>
-                      <h4 style={{ fontSize: '0.94rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                        {cred.title}
-                      </h4>
-                      <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                        {cred.issuer}
-                      </p>
-                    </div>
-                  </div>
-
-                  <Badge status={cred.status}>{cred.status}</Badge>
-                </div>
-
-                <div 
-                  style={{ 
-                    padding: '8px 12px', 
-                    borderRadius: 'var(--radius-sm)', 
-                    background: 'var(--bg-surface-2)', 
-                    fontSize: '0.76rem', 
-                    color: 'var(--text-secondary)',
-                    display: 'flex',
-                    justifyContent: 'space-between'
+        {/* Live Role Synchronizer / Interactive Presentation Tester */}
+        <div
+          style={{
+            borderRadius: 'var(--radius-xl)',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
+            padding: '20px 24px',
+            marginBottom: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '16px',
+            boxShadow: 'var(--card-shadow)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div
+              style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(16, 185, 129, 0.12)',
+                color: 'var(--brand-success)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                flexShrink: 0
+              }}
+            >
+              <Database size={22} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.92rem', fontWeight: '800', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Active Account Role:</span>
+                <span
+                  style={{
+                    padding: '2px 10px',
+                    borderRadius: 'var(--radius-full)',
+                    background: 'var(--brand-royal-blue)',
+                    color: '#FFFFFF',
+                    fontSize: '0.74rem',
+                    fontWeight: '800',
+                    letterSpacing: '0.04em'
                   }}
                 >
-                  <span>Holder: <strong>{cred.holderName}</strong></span>
-                  <span>ID: <strong>{cred.identifierNumber}</strong></span>
-                </div>
+                  {(selectedMatrixRole || normalizeRole(userProfile?.role)).toUpperCase()}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Persisted & validated in Supabase <span className="mono-text" style={{ color: 'var(--brand-royal-blue)' }}>profiles.role</span> table
+              </div>
+            </div>
+          </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.74rem', color: 'var(--text-muted)', paddingTop: '4px', borderTop: '1px solid var(--border-subtle)' }}>
-                  <span>Valid: {cred.expiryDate}</span>
-                  <span style={{ color: 'var(--brand-royal-blue)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    Inspect Details <ChevronRight size={12} />
-                  </span>
-                </div>
-              </Card>
-            );
-          })}
+          {/* Interactive Role Switcher */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)' }}>
+              Switch & Save in Supabase:
+            </span>
+            {[
+              { id: 'guest', label: 'Guest' },
+              { id: 'user', label: 'User (Citizen)' },
+              { id: 'verifier', label: 'Verifier (Hotel)' },
+              { id: 'issuer', label: 'Issuer (Govt)' },
+              { id: 'admin', label: 'Admin' }
+            ].map((r) => {
+              const currentActive = (selectedMatrixRole || normalizeRole(userProfile?.role));
+              const isSelected = currentActive === r.id;
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedMatrixRole(r.id);
+                    changeUserRole(r.id);
+                  }}
+                  style={{
+                    padding: '7px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    background: isSelected ? 'var(--brand-royal-blue)' : 'var(--bg-surface-2)',
+                    color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
+                    border: isSelected ? '1px solid var(--brand-royal-blue)' : '1px solid var(--border-subtle)',
+                    fontSize: '0.78rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    transition: 'var(--transition-fast)'
+                  }}
+                >
+                  {r.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* The RBAC Matrix Table */}
+        <div
+          style={{
+            borderRadius: 'var(--radius-xl)',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
+            overflow: 'hidden',
+            boxShadow: 'var(--card-shadow-hover)'
+          }}
+        >
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '760px' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg-surface-2)', borderBottom: '1px solid var(--border-default)' }}>
+                  <th style={{ padding: '18px 24px', fontSize: '0.86rem', fontWeight: '800', color: 'var(--text-primary)', width: '35%' }}>
+                    Module / Privilege
+                  </th>
+                  {[
+                    { key: 'guest', title: 'Guest' },
+                    { key: 'user', title: 'User (Citizen)' },
+                    { key: 'verifier', title: 'Verifier (Hotel)' },
+                    { key: 'issuer', title: 'Issuer (Govt)' },
+                    { key: 'admin', title: 'Admin' }
+                  ].map((col) => {
+                    const currentActive = (selectedMatrixRole || normalizeRole(userProfile?.role));
+                    const isColActive = currentActive === col.key;
+                    return (
+                      <th
+                        key={col.key}
+                        onClick={() => {
+                          setSelectedMatrixRole(col.key);
+                          changeUserRole(col.key);
+                        }}
+                        style={{
+                          padding: '16px 12px',
+                          fontSize: '0.84rem',
+                          fontWeight: '800',
+                          textAlign: 'center',
+                          color: isColActive ? 'var(--brand-royal-blue)' : 'var(--text-primary)',
+                          background: isColActive ? 'rgba(37, 99, 235, 0.10)' : 'transparent',
+                          cursor: 'pointer',
+                          borderLeft: '1px solid var(--border-subtle)',
+                          transition: 'var(--transition-fast)'
+                        }}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                          <span>{col.title}</span>
+                          {isColActive && (
+                            <span style={{ fontSize: '0.68rem', color: 'var(--brand-success)', fontWeight: '700' }}>Active</span>
+                          )}
+                        </div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  {
+                    title: 'Public Landing Page & Simulation',
+                    desc: 'Platform overview, SIH hash tampering simulator, and architectural specifications',
+                    icon: Sparkles,
+                    targetRoute: 'landing',
+                    access: { guest: true, user: true, verifier: true, issuer: true, admin: true }
+                  },
+                  {
+                    title: 'Holder Digital Wallet',
+                    desc: 'Self-sovereign credential storage, offline QR pass presentation, and identity disclosure',
+                    icon: Wallet,
+                    targetRoute: 'wallet',
+                    access: { guest: false, user: true, verifier: false, issuer: true, admin: true }
+                  },
+                  {
+                    title: 'Hotel Verifier Camera Terminal',
+                    desc: 'Instant zero-knowledge QR camera verification and cryptographic integrity checks',
+                    icon: Camera,
+                    targetRoute: 'verify',
+                    access: { guest: false, user: false, verifier: true, issuer: true, admin: true }
+                  },
+                  {
+                    title: 'DID Issuance & Revocation Desk',
+                    desc: 'Authorized digital credential issuance and real-time on-chain revocation anchors',
+                    icon: ShieldCheck,
+                    targetRoute: 'issue',
+                    access: { guest: false, user: false, verifier: false, issuer: true, admin: true }
+                  },
+                  {
+                    title: 'Blockchain Ledger Explorer',
+                    desc: 'Public audit trail, block validator stream, and SHA-256 state commitment verification',
+                    icon: Blocks,
+                    targetRoute: 'explorer',
+                    access: { guest: false, user: true, verifier: true, issuer: true, admin: true }
+                  },
+                  {
+                    title: 'Admin Role Governance Panel',
+                    desc: 'System-wide role governance, cryptographic authority management, and user registry',
+                    icon: Crown,
+                    targetRoute: 'admin',
+                    access: { guest: false, user: false, verifier: false, issuer: false, admin: true }
+                  }
+                ].map((row, idx) => {
+                  const RowIcon = row.icon;
+                  const currentActive = (selectedMatrixRole || normalizeRole(userProfile?.role));
+                  const isCurrentAllowed = row.access[currentActive];
+
+                  return (
+                    <tr
+                      key={row.title}
+                      style={{
+                        borderBottom: idx === 5 ? 'none' : '1px solid var(--border-subtle)',
+                        background: idx % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.015)',
+                        transition: 'var(--transition-fast)'
+                      }}
+                    >
+                      <td style={{ padding: '16px 24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                          <div
+                            style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: 'var(--radius-md)',
+                              background: isCurrentAllowed ? 'rgba(37, 99, 235, 0.12)' : 'var(--bg-surface-2)',
+                              color: isCurrentAllowed ? 'var(--brand-royal-blue)' : 'var(--text-muted)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              marginTop: '2px'
+                            }}
+                          >
+                            <RowIcon size={18} />
+                          </div>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>
+                                {row.title}
+                              </strong>
+                              <button
+                                type="button"
+                                onClick={() => navigateTo(row.targetRoute)}
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: 'var(--brand-royal-blue)',
+                                  fontSize: '0.72rem',
+                                  fontWeight: '700',
+                                  cursor: 'pointer',
+                                  padding: 0,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '2px'
+                                }}
+                                title={`Navigate to ${row.title}`}
+                              >
+                                <span>Launch</span>
+                                <ChevronRight size={12} />
+                              </button>
+                            </div>
+                            <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '2px', lineHeight: '1.4' }}>
+                              {row.desc}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {['guest', 'user', 'verifier', 'issuer', 'admin'].map((roleKey) => {
+                        const allowed = row.access[roleKey];
+                        const currentActive = (selectedMatrixRole || normalizeRole(userProfile?.role));
+                        const isColActive = currentActive === roleKey;
+
+                        return (
+                          <td
+                            key={roleKey}
+                            style={{
+                              padding: '16px 12px',
+                              textAlign: 'center',
+                              background: isColActive ? 'rgba(37, 99, 235, 0.08)' : 'transparent',
+                              borderLeft: '1px solid var(--border-subtle)',
+                              verticalAlign: 'middle'
+                            }}
+                          >
+                            {allowed ? (
+                              <div
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '50%',
+                                  background: 'rgba(16, 185, 129, 0.14)',
+                                  border: '1px solid rgba(16, 185, 129, 0.35)',
+                                  color: 'var(--brand-success)'
+                                }}
+                                title="Allowed Privilege"
+                              >
+                                <CheckCircle2 size={18} />
+                              </div>
+                            ) : (
+                              <div
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '50%',
+                                  background: 'rgba(239, 68, 68, 0.08)',
+                                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                                  color: 'var(--brand-danger)',
+                                  opacity: 0.65
+                                }}
+                                title="Restricted Privilege"
+                              >
+                                <XCircle size={18} />
+                              </div>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 

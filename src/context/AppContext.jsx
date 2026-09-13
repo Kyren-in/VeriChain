@@ -70,6 +70,104 @@ export const DEFAULT_GUEST_PROFILE = {
   role: 'guest'
 };
 
+// 6. Role-Based Access Control (RBAC) Specification Matrix
+export const RBAC_MODULES = [
+  {
+    id: 'landing',
+    name: 'Public Landing Page & Simulation',
+    description: 'Overview, interactive SIH hash tampering simulator, and architecture specifications',
+    allowed: ['guest', 'user', 'verifier', 'issuer', 'admin'],
+    primaryRoute: 'landing'
+  },
+  {
+    id: 'wallet',
+    name: 'Holder Digital Wallet',
+    description: 'Self-sovereign credential storage, offline QR pass presentation, and identity management',
+    allowed: ['user', 'issuer', 'admin'],
+    primaryRoute: 'wallet'
+  },
+  {
+    id: 'verify',
+    name: 'Hotel Verifier Camera Terminal',
+    description: 'Instant zero-knowledge QR camera verification and cryptographic integrity checks',
+    allowed: ['verifier', 'issuer', 'admin'],
+    primaryRoute: 'verify'
+  },
+  {
+    id: 'issue',
+    name: 'DID Issuance & Revocation Desk',
+    description: 'Authorized issuance of digital credentials and real-time on-chain revocation anchors',
+    allowed: ['issuer', 'admin'],
+    primaryRoute: 'issue'
+  },
+  {
+    id: 'explorer',
+    name: 'Blockchain Ledger Explorer',
+    description: 'Public audit trail, block validator stream, and SHA-256 state commitment verification',
+    allowed: ['user', 'verifier', 'issuer', 'admin'],
+    primaryRoute: 'explorer'
+  },
+  {
+    id: 'admin',
+    name: 'Admin Role Governance Panel',
+    description: 'System-wide role governance, cryptographic authority management, and user registry',
+    allowed: ['admin'],
+    primaryRoute: 'admin'
+  }
+];
+
+export function normalizeRole(role) {
+  const r = (role || 'guest').toLowerCase();
+  if (r.includes('admin')) return 'admin';
+  if (r.includes('issuer') || r.includes('govt')) return 'issuer';
+  if (r.includes('verifier') || r.includes('hotel')) return 'verifier';
+  if (r.includes('user') || r.includes('citizen') || r.includes('holder')) return 'user';
+  return 'guest';
+}
+
+export function hasModuleAccess(role, moduleId) {
+  const cleanRole = normalizeRole(role);
+  const mod = RBAC_MODULES.find((m) => m.id === moduleId);
+  if (!mod) return true;
+  return mod.allowed.includes(cleanRole);
+}
+
+export function canAccessRoute(role, isAuthenticated, route) {
+  const cleanRole = !isAuthenticated ? 'guest' : normalizeRole(role);
+
+  // Public Routes (Accessible by all including Guest)
+  if (['landing', 'how-it-works', 'login'].includes(route)) {
+    return true;
+  }
+
+  // Unauthenticated visitors are redirected for non-public routes
+  if (!isAuthenticated && cleanRole === 'guest') {
+    return false;
+  }
+
+  // Route-to-RBAC Matrix Enforcement
+  if (['dashboard', 'wallet', 'credentials', 'credential-detail'].includes(route)) {
+    return ['user', 'issuer', 'admin'].includes(cleanRole);
+  }
+  if (['verify', 'verification-result'].includes(route)) {
+    return ['verifier', 'issuer', 'admin'].includes(cleanRole);
+  }
+  if (['issue'].includes(route)) {
+    return ['issuer', 'admin'].includes(cleanRole);
+  }
+  if (['explorer', 'blockchain'].includes(route)) {
+    return ['user', 'verifier', 'issuer', 'admin'].includes(cleanRole);
+  }
+  if (['admin'].includes(route)) {
+    return cleanRole === 'admin';
+  }
+  if (['profile', 'settings', 'activity'].includes(route)) {
+    return isAuthenticated;
+  }
+
+  return true;
+}
+
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
@@ -458,6 +556,42 @@ export function AppProvider({ children }) {
     showToast('All notifications marked as read', 'info');
   };
 
+  // Change user role dynamically and persist directly to Supabase
+  const changeUserRole = async (newRole) => {
+    const cleanRole = (newRole || 'user').toLowerCase();
+    
+    // Update local state immediately
+    setUserProfile((prev) => ({
+      ...(prev || DEFAULT_GUEST_PROFILE),
+      role: cleanRole
+    }));
+
+    // If signed into Supabase, persist to profiles table
+    if (user?.id) {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            role: cleanRole,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+
+        if (error) {
+          console.warn('[Supabase Role Update Notice]:', error);
+          showToast(`Role updated locally (${cleanRole}), database sync notice: ${error.message}`, 'warning');
+        } else {
+          showToast(`Role updated to ${cleanRole.toUpperCase()} & saved in Supabase!`, 'success');
+        }
+      } catch (err) {
+        console.error('[Supabase Role Update Error]:', err);
+        showToast(`Role updated locally to ${cleanRole.toUpperCase()}`, 'info');
+      }
+    } else {
+      showToast(`Active demo role switched to ${cleanRole.toUpperCase()} (Demo Mode)`, 'info');
+    }
+  };
+
   const selectedCredential =
     credentials.find((c) => c.id === selectedCredentialId) || credentials[0] || null;
 
@@ -479,6 +613,7 @@ export function AppProvider({ children }) {
         markAllNotificationsAsRead,
         userProfile,
         setUserProfile,
+        changeUserRole,
         session,
         user,
         authLoading,
