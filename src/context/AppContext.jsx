@@ -70,41 +70,41 @@ export const DEFAULT_GUEST_PROFILE = {
   role: 'guest'
 };
 
-// 6. Role-Based Access Control (RBAC) Specification Matrix
+// 6. Role-Based Access Control (RBAC) Specification Matrix (Exact 5 Roles)
 export const RBAC_MODULES = [
   {
     id: 'landing',
     name: 'Public Landing Page & Simulation',
     description: 'Overview, interactive SIH hash tampering simulator, and architecture specifications',
-    allowed: ['guest', 'user', 'verifier', 'issuer', 'admin'],
+    allowed: ['guest', 'user', 'verifier', 'issuer', 'govt', 'admin'],
     primaryRoute: 'landing'
   },
   {
     id: 'wallet',
     name: 'Holder Digital Wallet',
     description: 'Self-sovereign credential storage, offline QR pass presentation, and identity management',
-    allowed: ['user', 'issuer', 'admin'],
+    allowed: ['user', 'issuer', 'govt', 'admin'],
     primaryRoute: 'wallet'
   },
   {
     id: 'verify',
     name: 'Hotel Verifier Camera Terminal',
     description: 'Instant zero-knowledge QR camera verification and cryptographic integrity checks',
-    allowed: ['verifier', 'issuer', 'admin'],
+    allowed: ['verifier', 'issuer', 'govt', 'admin'],
     primaryRoute: 'verify'
   },
   {
     id: 'issue',
     name: 'DID Issuance & Revocation Desk',
     description: 'Authorized issuance of digital credentials and real-time on-chain revocation anchors',
-    allowed: ['issuer', 'admin'],
+    allowed: ['issuer', 'govt', 'admin'],
     primaryRoute: 'issue'
   },
   {
     id: 'explorer',
     name: 'Blockchain Ledger Explorer',
     description: 'Public audit trail, block validator stream, and SHA-256 state commitment verification',
-    allowed: ['user', 'verifier', 'issuer', 'admin'],
+    allowed: ['user', 'verifier', 'issuer', 'govt', 'admin'],
     primaryRoute: 'explorer'
   },
   {
@@ -117,9 +117,15 @@ export const RBAC_MODULES = [
 ];
 
 export function normalizeRole(role) {
-  const r = (role || 'guest').toLowerCase();
+  const r = (role || 'guest').toLowerCase().trim();
+  if (r === 'admin') return 'admin';
+  if (r === 'govt') return 'govt';
+  if (r === 'issuer') return 'issuer';
+  if (r === 'verifier') return 'verifier';
+  if (r === 'user') return 'user';
   if (r.includes('admin')) return 'admin';
-  if (r.includes('issuer') || r.includes('govt')) return 'issuer';
+  if (r.includes('govt')) return 'govt';
+  if (r.includes('issuer')) return 'issuer';
   if (r.includes('verifier') || r.includes('hotel')) return 'verifier';
   if (r.includes('user') || r.includes('citizen') || r.includes('holder')) return 'user';
   return 'guest';
@@ -140,27 +146,42 @@ export function canAccessRoute(role, isAuthenticated, route) {
     return true;
   }
 
-  // Unauthenticated visitors are redirected for non-public routes
-  if (!isAuthenticated && cleanRole === 'guest') {
+  // Unauthenticated visitors are gated for all protected modules
+  if (!isAuthenticated || cleanRole === 'guest') {
     return false;
   }
 
-  // Route-to-RBAC Matrix Enforcement
-  if (['dashboard', 'wallet', 'credentials', 'credential-detail'].includes(route)) {
-    return ['user', 'issuer', 'admin'].includes(cleanRole);
+  // User Dashboard (Accessible by all authenticated roles)
+  if (route === 'dashboard') {
+    return ['user', 'verifier', 'issuer', 'govt', 'admin'].includes(cleanRole);
   }
+
+  // Holder Digital Wallet & Credentials (Holder, Issuer, Govt, Admin only; NOT Verifier)
+  if (['wallet', 'credentials', 'credential-detail'].includes(route)) {
+    return ['user', 'issuer', 'govt', 'admin'].includes(cleanRole);
+  }
+
+  // Verifier Terminal & Scanner (Verifier, Issuer, Govt, Admin only; NOT Citizen User)
   if (['verify', 'verification-result'].includes(route)) {
-    return ['verifier', 'issuer', 'admin'].includes(cleanRole);
+    return ['verifier', 'issuer', 'govt', 'admin'].includes(cleanRole);
   }
+
+  // Credential Issuance & Revocation Desk (Issuer, Govt, Admin only)
   if (['issue'].includes(route)) {
-    return ['issuer', 'admin'].includes(cleanRole);
+    return ['issuer', 'govt', 'admin'].includes(cleanRole);
   }
+
+  // Blockchain Ledger Explorer (All authenticated roles)
   if (['explorer', 'blockchain'].includes(route)) {
-    return ['user', 'verifier', 'issuer', 'admin'].includes(cleanRole);
+    return ['user', 'verifier', 'issuer', 'govt', 'admin'].includes(cleanRole);
   }
-  if (['admin'].includes(route)) {
+
+  // Admin Governance & Role Management (STRICT: Master Admin only; govt does NOT have role change access)
+  if (['admin', 'admin/users', 'admin/roles'].includes(route)) {
     return cleanRole === 'admin';
   }
+
+  // Account management
   if (['profile', 'settings', 'activity'].includes(route)) {
     return isAuthenticated;
   }
@@ -211,7 +232,7 @@ export function AppProvider({ children }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Helper to load Supabase Profile
+  // Helper to load Supabase Profile (Authoritative role from profiles.role ONLY)
   const loadUserProfileFromSupabase = useCallback(async (supabaseUser) => {
     if (!supabaseUser) return;
     try {
@@ -225,9 +246,10 @@ export function AppProvider({ children }) {
         console.warn('[Supabase Profile] fetch error:', error);
       }
 
-      const role = (profile?.role || supabaseUser.user_metadata?.role || 'user').toLowerCase();
-      const fullName = profile?.full_name || supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0] || 'User';
-      const phone = profile?.phone || supabaseUser.user_metadata?.phone || '';
+      // Authoritative role from Supabase profiles.role ONLY - never trust user_metadata
+      const role = normalizeRole(profile?.role || 'user');
+      const fullName = profile?.full_name || supabaseUser.email?.split('@')[0] || 'User';
+      const phone = profile?.phone || '';
       const passportNumber = profile?.passport_number || '';
       const did = `did:veri:80002:0x${supabaseUser.id.replace(/-/g, '').substring(0, 24)}`;
       const avatar = profile?.avatar || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250`;
@@ -246,10 +268,13 @@ export function AppProvider({ children }) {
     }
   }, []);
 
-  // Fetch real credentials from Express ledger
+  // Fetch real credentials from Express ledger with Supabase session token
   const fetchCredentials = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/credentials`);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE_URL}/api/credentials`, { headers });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -379,18 +404,16 @@ export function AppProvider({ children }) {
     }
   };
 
-  // Real Supabase Account Registration with Profiles Table sync
-  const registerWithSupabase = async ({ email, password, fullName, phone, role }) => {
+  // Real Supabase Account Registration with strict default role = "user"
+  const registerWithSupabase = async ({ email, password, fullName, phone }) => {
     const cleanEmail = email.trim().toLowerCase();
-    const dbRole = (role || 'user').toLowerCase();
     const { data, error } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
       options: {
         data: {
           full_name: fullName,
-          phone: phone || '',
-          role: dbRole
+          phone: phone || ''
         }
       }
     });
@@ -404,7 +427,7 @@ export function AppProvider({ children }) {
           email: cleanEmail,
           full_name: fullName,
           phone: phone || '',
-          role: dbRole,
+          role: 'user', // STRICT: Every newly registered account receives role = 'user'
           updated_at: new Date().toISOString()
         });
       } catch (upsertErr) {
@@ -441,12 +464,19 @@ export function AppProvider({ children }) {
     navigateTo('landing');
   };
 
-  // Issue Credential to Express / Supabase Ledger
+  // Issue Credential to Express / Supabase Ledger (Protected by Bearer Token)
   const addCredential = async (newCred) => {
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      };
+
       const res = await fetch(`${API_BASE_URL}/api/credentials/issue`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           holderName: newCred.holderName || userProfile?.name || 'Authorized Holder',
           userEmail: newCred.userEmail || userProfile?.email || null,
@@ -493,12 +523,19 @@ export function AppProvider({ children }) {
     }
   };
 
-  // Revoke Credential on Express / Supabase Ledger
+  // Revoke Credential on Express / Supabase Ledger (Protected by Bearer Token)
   const revokeCredential = async (credentialId, reason = 'Administrative revocation') => {
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      };
+
       const res = await fetch(`${API_BASE_URL}/api/credentials/revoke`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ id: credentialId, reason })
       });
 
@@ -556,42 +593,6 @@ export function AppProvider({ children }) {
     showToast('All notifications marked as read', 'info');
   };
 
-  // Change user role dynamically and persist directly to Supabase
-  const changeUserRole = async (newRole) => {
-    const cleanRole = (newRole || 'user').toLowerCase();
-    
-    // Update local state immediately
-    setUserProfile((prev) => ({
-      ...(prev || DEFAULT_GUEST_PROFILE),
-      role: cleanRole
-    }));
-
-    // If signed into Supabase, persist to profiles table
-    if (user?.id) {
-      try {
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            role: cleanRole,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-
-        if (error) {
-          console.warn('[Supabase Role Update Notice]:', error);
-          showToast(`Role updated locally (${cleanRole}), database sync notice: ${error.message}`, 'warning');
-        } else {
-          showToast(`Role updated to ${cleanRole.toUpperCase()} & saved in Supabase!`, 'success');
-        }
-      } catch (err) {
-        console.error('[Supabase Role Update Error]:', err);
-        showToast(`Role updated locally to ${cleanRole.toUpperCase()}`, 'info');
-      }
-    } else {
-      showToast(`Active demo role switched to ${cleanRole.toUpperCase()} (Demo Mode)`, 'info');
-    }
-  };
-
   const selectedCredential =
     credentials.find((c) => c.id === selectedCredentialId) || credentials[0] || null;
 
@@ -613,7 +614,6 @@ export function AppProvider({ children }) {
         markAllNotificationsAsRead,
         userProfile,
         setUserProfile,
-        changeUserRole,
         session,
         user,
         authLoading,

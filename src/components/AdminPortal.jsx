@@ -6,6 +6,7 @@ import {
   Users
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import { API_BASE_URL } from '../api';
 import { useApp } from '../context/AppContext';
 import { Badge, Card, Button, Input, EmptyState } from './ui';
 
@@ -26,6 +27,7 @@ export default function AdminPortal() {
           const rawRole = (p.role || 'user').toLowerCase();
           let displayRole = 'Holder';
           if (rawRole === 'admin') displayRole = 'Admin';
+          else if (rawRole === 'govt') displayRole = 'Govt';
           else if (rawRole === 'issuer') displayRole = 'Issuer';
           else if (rawRole === 'verifier') displayRole = 'Verifier';
 
@@ -65,6 +67,7 @@ export default function AdminPortal() {
             const rawRole = (p.role || 'user').toLowerCase();
             let displayRole = 'Holder';
             if (rawRole === 'admin') displayRole = 'Admin';
+            else if (rawRole === 'govt') displayRole = 'Govt';
             else if (rawRole === 'issuer') displayRole = 'Issuer';
             else if (rawRole === 'verifier') displayRole = 'Verifier';
 
@@ -98,16 +101,28 @@ export default function AdminPortal() {
     const dbRole = targetRole.toLowerCase() === 'holder' ? 'user' : targetRole.toLowerCase();
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          role: dbRole,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) {
+        throw new Error('Authentication session token required to perform administrative role management.');
+      }
 
-      if (error) {
-        throw error;
+      // STRICT: Role change MUST go through the protected backend endpoint requiring admin authorization
+      const res = await fetch(`${API_BASE_URL}/api/admin/roles/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          targetUserId: userId,
+          newRole: dbRole
+        })
+      });
+
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.error || 'Server rejected role update.');
       }
 
       setUsersList((prev) =>
@@ -277,8 +292,8 @@ export default function AdminPortal() {
                       Assigned Role:
                     </span>
                     
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      {['Holder', 'Issuer', 'Verifier', 'Admin'].map((r) => {
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                      {['Holder', 'Verifier', 'Issuer', 'Govt', 'Admin'].map((r) => {
                         const isCurrent = user.role.toLowerCase() === r.toLowerCase();
 
                         return (

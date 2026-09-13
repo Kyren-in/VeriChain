@@ -1,10 +1,10 @@
 import React from 'react';
-import { ShieldAlert, ArrowLeft, Lock, UserCheck } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Lock } from 'lucide-react';
 import { useApp, RBAC_MODULES, normalizeRole } from '../context/AppContext';
 import { Button, Card, Badge } from './ui';
 
 export default function AccessDeniedView({ currentRoute }) {
-  const { userProfile, isAuthenticated, navigateTo, changeUserRole } = useApp();
+  const { userProfile, isAuthenticated, navigateTo } = useApp();
 
   const activeRole = normalizeRole(userProfile?.role);
 
@@ -24,7 +24,8 @@ export default function AccessDeniedView({ currentRoute }) {
     guest: 'Guest (Public)',
     user: 'Citizen / Holder',
     verifier: 'Hotel / Verifier',
-    issuer: 'Govt / Issuer',
+    issuer: 'Authority / Issuer',
+    govt: 'Government Department',
     admin: 'Platform Admin'
   };
 
@@ -60,17 +61,17 @@ export default function AccessDeniedView({ currentRoute }) {
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
           <Badge status="revoked" size="sm">
             <Lock size={12} style={{ marginRight: '4px' }} />
-            RBAC Access Enforced
+            403 Forbidden • Access Restricted
           </Badge>
         </div>
 
         <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '8px' }}>
-          Access Restricted
+          Unauthorized Module Access
         </h2>
 
         <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '24px' }}>
-          You do not have sufficient permissions to access the <strong>{matchedModule.name}</strong>.
-          Access permissions are dynamically synchronized and validated via Supabase.
+          Your authenticated account does not hold the required cryptographic permissions to access <strong>{matchedModule.name}</strong>.
+          Role privileges are strictly governed by the authoritative Supabase identity registry.
         </p>
 
         {/* Roles Details Box */}
@@ -88,9 +89,9 @@ export default function AccessDeniedView({ currentRoute }) {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.84rem' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Your Current Role:</span>
+            <span style={{ color: 'var(--text-muted)' }}>Your Authenticated Role:</span>
             <span style={{ fontWeight: '700', color: 'var(--brand-royal-blue)' }}>
-              {roleLabels[activeRole] || activeRole.toUpperCase()} (Saved in Supabase)
+              {roleLabels[activeRole] || activeRole.toUpperCase()}
             </span>
           </div>
 
@@ -117,55 +118,20 @@ export default function AccessDeniedView({ currentRoute }) {
           </div>
         </div>
 
-        {/* Demo Role Switcher for SIH 2026 Presentation */}
-        <div style={{ marginBottom: '24px', padding: '16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface-sunken)', border: '1px dashed var(--border-default)' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            SIH Presentation Demo: Test with an Authorized Role
-          </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {matchedModule.allowed.map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => {
-                  changeUserRole(r);
-                  navigateTo(currentRoute);
-                }}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'var(--brand-royal-blue)',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  fontSize: '0.78rem',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <UserCheck size={14} />
-                <span>Switch to {roleLabels[r] || r} & Enter</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Navigation Action Buttons */}
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
           <Button
-            variant="secondary"
+            variant="primary"
             size="md"
             icon={ArrowLeft}
             onClick={() => navigateTo(isAuthenticated ? 'dashboard' : 'landing')}
           >
-            {isAuthenticated ? 'Return to Dashboard' : 'Back to Landing Page'}
+            {isAuthenticated ? 'Return to Authorized Dashboard' : 'Back to Landing Page'}
           </Button>
 
           {!isAuthenticated && (
             <Button
-              variant="primary"
+              variant="secondary"
               size="md"
               onClick={() => navigateTo('login')}
             >

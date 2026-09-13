@@ -1,20 +1,27 @@
 import React from 'react';
-import { Home, Wallet, QrCode, User } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { Home, Wallet, QrCode, User, HelpCircle, LogIn } from 'lucide-react';
+import { useApp, canAccessRoute } from '../context/AppContext';
 
 export default function MobileNav() {
-  const { currentRoute, navigateTo } = useApp();
+  const { currentRoute, navigateTo, userProfile, isAuthenticated } = useApp();
 
-  const navItems = [
+  const allNavItems = [
     { id: 'dashboard', label: 'Home', icon: Home },
     { id: 'wallet', label: 'Wallet', icon: Wallet },
     { id: 'verify', label: 'Scan', icon: QrCode },
-    { id: 'profile', label: 'Profile', icon: User }
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'how-it-works', label: 'Guide', icon: HelpCircle },
+    { id: 'login', label: 'Sign In', icon: LogIn }
   ];
+
+  const visibleNavItems = allNavItems.filter((item) => {
+    if (item.id === 'login') return !isAuthenticated;
+    return canAccessRoute(userProfile?.role, isAuthenticated, item.id);
+  });
 
   return (
     <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
-      {navItems.map((item) => {
+      {visibleNavItems.map((item) => {
         const Icon = item.icon;
         const isActive = 
           currentRoute === item.id ||

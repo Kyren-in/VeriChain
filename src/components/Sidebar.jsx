@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { useApp, canAccessRoute, normalizeRole } from '../context/AppContext';
 import ThemeToggle from './ThemeToggle';
-import { Lock } from 'lucide-react';
 
 export default function Sidebar() {
   const { currentRoute, navigateTo, userProfile, isAuthenticated, logout } = useApp();
@@ -27,10 +26,11 @@ export default function Sidebar() {
   const isAdmin = activeRole === 'admin';
 
   const roleDisplayNames = {
-    guest: 'Guest',
-    user: 'Citizen',
+    guest: 'Guest (Visitor)',
+    user: 'Citizen (Holder)',
     verifier: 'Hotel Verifier',
-    issuer: 'Govt Issuer',
+    issuer: 'Issuer Authority',
+    govt: 'Govt Department',
     admin: 'Platform Admin'
   };
 
@@ -65,10 +65,18 @@ export default function Sidebar() {
         { id: 'activity', label: 'Activity Log', icon: History },
         { id: 'profile', label: 'Profile', icon: User },
         { id: 'settings', label: 'Settings', icon: Settings },
-        { id: 'login', label: isAuthenticated ? 'Switch / Sign Out' : 'Sign In', icon: isAuthenticated ? LogOut : LogIn }
+        { id: 'login', label: isAuthenticated ? 'Sign Out / Switch' : 'Sign In', icon: isAuthenticated ? LogOut : LogIn }
       ]
     }
   ];
+
+  // Strictly filter out any module the current user is not authorized to access
+  const visibleSections = navSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => canAccessRoute(userProfile?.role, isAuthenticated, item.id))
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <aside className="app-sidebar">
@@ -76,7 +84,7 @@ export default function Sidebar() {
       <div className="sidebar-header">
         <div 
           className="brand-logo-wrap" 
-          onClick={() => navigateTo('dashboard')}
+          onClick={() => navigateTo(isAuthenticated ? 'dashboard' : 'landing')}
         >
           <div className="brand-shield-icon">
             <Shield size={22} />
@@ -90,7 +98,7 @@ export default function Sidebar() {
 
       {/* Navigation Groups */}
       <nav className="sidebar-nav">
-        {navSections.map((section) => (
+        {visibleSections.map((section) => (
           <div key={section.title}>
             <div className="nav-group-title">{section.title}</div>
             <ul className="nav-list">
@@ -99,7 +107,6 @@ export default function Sidebar() {
                 const isActive = currentRoute === item.id || 
                   (item.id === 'credentials' && currentRoute === 'credential-detail') ||
                   (item.id === 'verify' && currentRoute === 'verification-result');
-                const isPermitted = canAccessRoute(userProfile?.role, isAuthenticated, item.id);
 
                 return (
                   <li key={item.id}>
@@ -108,10 +115,8 @@ export default function Sidebar() {
                       onClick={() => navigateTo(item.id)}
                       className={`nav-item-btn ${isActive ? 'active' : ''}`}
                       style={{
-                        opacity: isPermitted ? 1 : 0.65,
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'space-between',
                         width: '100%'
                       }}
                     >
@@ -119,9 +124,6 @@ export default function Sidebar() {
                         <Icon size={18} className="nav-icon" />
                         <span>{item.label}</span>
                       </div>
-                      {!isPermitted && (
-                        <Lock size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                      )}
                     </button>
                   </li>
                 );

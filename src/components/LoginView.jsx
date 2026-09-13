@@ -22,7 +22,6 @@ export default function LoginView() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState('user');
 
   // Handle Form Submit
   const handleAuthSubmit = async (e) => {
@@ -38,8 +37,7 @@ export default function LoginView() {
           email,
           password,
           fullName: name,
-          phone: '',
-          role
+          phone: ''
         });
       }
     } catch (err) {
@@ -205,39 +203,7 @@ export default function LoginView() {
             </button>
           </div>
 
-          {authMode === 'register' && (
-            <div>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px' }}>
-                Identity Role
-              </label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {[
-                  { key: 'user', label: 'Holder / Citizen' },
-                  { key: 'issuer', label: 'Issuer Authority' },
-                  { key: 'verifier', label: 'Verifier Terminal' }
-                ].map((r) => (
-                  <button
-                    key={r.key}
-                    type="button"
-                    onClick={() => setRole(r.key)}
-                    style={{
-                      flex: 1,
-                      padding: '8px',
-                      borderRadius: 'var(--radius-md)',
-                      border: role === r.key ? '1.5px solid var(--brand-royal-blue)' : '1px solid var(--border-default)',
-                      background: role === r.key ? 'rgba(37, 99, 235, 0.12)' : 'var(--bg-surface-2)',
-                      color: role === r.key ? 'var(--brand-royal-blue)' : 'var(--text-muted)',
-                      fontSize: '0.78rem',
-                      fontWeight: '700',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {r.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+
 
           <Button
             variant="primary"
