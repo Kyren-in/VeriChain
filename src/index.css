@@ -1,22 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import './styles/tokens.css';
+@import './styles/appShell.css';
 
 :root {
-  /* SIH 2026 Core Color Tokens */
-  --bg-midnight: #0B1220;
-  --bg-midnight-card: #10192C;
-  --bg-surface: #142038;
-  --bg-surface-elevated: #1B2B4A;
-  --bg-surface-sunken: #070C16;
+  /* SIH 2026 Core Color Tokens bridged to Central Design Tokens */
+  --bg-midnight: var(--bg-primary);
+  --bg-midnight-card: var(--bg-card);
+  --bg-surface: var(--bg-surface);
+  --bg-surface-elevated: var(--bg-surface-2);
+  --bg-surface-sunken: var(--bg-surface-sunken);
 
   /* Tricolor & Accent Palette */
   --saffron: #FF8A3D;
-  --saffron-glow: rgba(255, 138, 61, 0.25);
+  --saffron-glow: rgba(255, 138, 61, 0.20);
   --saffron-soft: rgba(255, 138, 61, 0.12);
-  --india-green: #168A5B;
-  --india-green-glow: rgba(22, 138, 91, 0.25);
-  --india-green-soft: rgba(22, 138, 91, 0.14);
-  --digital-blue: #2563EB;
-  --digital-blue-glow: rgba(37, 99, 235, 0.35);
+  --india-green: #10B981;
+  --india-green-glow: rgba(16, 185, 129, 0.20);
+  --india-green-soft: rgba(16, 185, 129, 0.12);
+  --digital-blue: var(--brand-royal-blue);
+  --digital-blue-glow: rgba(37, 99, 235, 0.25);
   --digital-blue-light: #60A5FA;
   
   /* Status Colors */
@@ -25,31 +27,31 @@
   --status-danger: #EF4444;
   --status-revoked: #DC2626;
 
-  /* Neutral Tone Tokens */
+  /* Neutral Tone Tokens - High Contrast Visibility */
   --off-white: #F8FAFC;
-  --text-main: #FFFFFF;
-  --text-muted: #94A3B8;
-  --text-dim: #64748B;
-  --text-subtle: #475569;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-light: rgba(255, 255, 255, 0.14);
+  --text-main: var(--text-primary);
+  --text-muted: var(--text-muted);
+  --text-dim: var(--text-dim);
+  --text-subtle: #7E8FA6;
+  --border-subtle: var(--border-subtle);
+  --border-light: var(--border-default);
 
   /* Typography */
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Neumorphic Shadows (Layered for GovTech Dark Mode) */
-  --neu-flat: 6px 6px 16px rgba(0, 0, 0, 0.45), -4px -4px 14px rgba(255, 255, 255, 0.03);
-  --neu-elevated: 10px 10px 24px rgba(0, 0, 0, 0.55), -6px -6px 20px rgba(255, 255, 255, 0.04);
-  --neu-pressed: inset 4px 4px 10px rgba(0, 0, 0, 0.6), inset -3px -3px 8px rgba(255, 255, 255, 0.02);
-  --neu-glow-saffron: 0 8px 24px rgba(255, 138, 61, 0.22), 0 0 40px rgba(255, 138, 61, 0.1);
-  --neu-glow-blue: 0 8px 28px rgba(37, 99, 235, 0.3), 0 0 50px rgba(37, 99, 235, 0.12);
-  --neu-glow-green: 0 8px 24px rgba(16, 185, 129, 0.25);
+  /* Shadows (Crisp elevation, clean GovTech architecture without over-blurred halos) */
+  --neu-flat: 0 4px 18px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --neu-elevated: 0 8px 28px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --neu-pressed: inset 2px 2px 6px rgba(0, 0, 0, 0.5), inset -1px -1px 3px rgba(255, 255, 255, 0.04);
+  --neu-glow-saffron: 0 4px 16px rgba(255, 138, 61, 0.25);
+  --neu-glow-blue: 0 4px 20px rgba(37, 99, 235, 0.28);
+  --neu-glow-green: 0 4px 16px rgba(16, 185, 129, 0.25);
 
   /* Claymorphic 3D Card Tokens */
-  --clay-card: 0 16px 36px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.2), inset 0 -3px 4px rgba(0, 0, 0, 0.4);
-  --clay-btn: 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.35), inset 0 -2px 3px rgba(0, 0, 0, 0.35);
-  --clay-pill: 0 6px 14px rgba(0, 0, 0, 0.3), inset 0 1.5px 2px rgba(255, 255, 255, 0.3), inset 0 -1.5px 2px rgba(0, 0, 0, 0.3);
+  --clay-card: 0 12px 30px rgba(0, 0, 0, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  --clay-btn: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.25);
+  --clay-pill: 0 3px 10px rgba(0, 0, 0, 0.25), inset 0 1px 1.5px rgba(255, 255, 255, 0.25);
 
   /* Transitions */
   --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -62,14 +64,19 @@
   padding: 0;
 }
 
+:focus-visible {
+  outline: 2px solid var(--brand-royal-blue) !important;
+  outline-offset: 2px !important;
+}
+
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
 }
 
 body {
-  background-color: var(--bg-midnight);
-  color: var(--text-main);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: var(--font-sans);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -95,26 +102,49 @@ body::before {
   z-index: 0;
 }
 
+[data-theme="light"] body::before {
+  opacity: 0.15;
+}
+
+[data-theme="light"] {
+  --bg-midnight: var(--bg-primary);
+  --bg-midnight-card: var(--bg-card);
+  --bg-surface: var(--bg-surface);
+  --bg-surface-elevated: var(--bg-surface-2);
+  --bg-surface-sunken: var(--bg-surface-sunken);
+
+  --text-main: var(--text-primary);
+  --text-muted: var(--text-muted);
+  --text-dim: var(--text-dim);
+  --text-subtle: #475569;
+  --border-subtle: var(--border-subtle);
+  --border-light: var(--border-default);
+
+  --neu-flat: 0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --neu-elevated: 0 8px 24px rgba(15, 23, 42, 0.10), 0 2px 6px rgba(15, 23, 42, 0.06);
+  --neu-pressed: inset 1px 1px 4px rgba(15, 23, 42, 0.08);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-midnight);
+  background: var(--bg-surface);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-surface-elevated);
+  background: var(--bg-surface-2);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--digital-blue);
+  background: var(--brand-royal-blue);
 }
 
 /* Typography Utility */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--text-main);
+  color: var(--text-primary);
 }
 
 .mono-text {

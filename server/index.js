@@ -96,7 +96,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
 
   otpStore.set(email, { otp: generatedOtp, expiresAt, pendingUser: { email, fullName, password } });
 
-  const result = await sendEmail({
+  await sendEmail({
     to: email,
     subject: 'VeriChain - Your Registration Verification OTP',
     htmlContent: `

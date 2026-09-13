@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  UserCheck, ShieldCheck, Hash, Sparkles, Calendar, Globe, 
-  CreditCard, Ban, Camera, Search, User, ShieldAlert, AlertTriangle, CheckCircle2, RotateCcw, Trash2 
+  UserCheck, ShieldCheck, Hash, Sparkles, 
+  Ban, Search, ShieldAlert, Trash2 
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { API_BASE_URL } from '../api';

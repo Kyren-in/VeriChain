@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Scan, ShieldCheck, ShieldAlert, AlertOctagon, Camera, FileJson, Sparkles, CheckCircle2, Lock, Cpu, RotateCcw, Image, Upload } from 'lucide-react';
+import { Scan, ShieldCheck, ShieldAlert, AlertOctagon, Camera, FileJson, Lock, RotateCcw, Image } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import QrScannerModal from './QrScannerModal';
 import { API_BASE_URL } from '../api';
@@ -30,7 +30,7 @@ export default function VerifierPortal() {
       });
       const data = await res.json();
       setVerificationResult(data);
-    } catch (err) {
+    } catch {
       setVerificationResult({
         status: 'INVALID',
         message: 'QR code data could not be parsed as a valid VeriChain credential.',

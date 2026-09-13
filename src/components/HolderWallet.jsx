@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import QRCode from 'qrcode';
-import { 
-  Wallet, QrCode, Shield, ShieldAlert, CheckCircle, RefreshCw, 
-  X, AlertTriangle, Eye, EyeOff, KeyRound, Trash2, Settings, 
-  Fingerprint, Sparkles, Lock, ArrowRight, Layers 
+import {
+  Wallet, QrCode, Shield, ShieldAlert, RefreshCw,
+  X, AlertTriangle, Eye, EyeOff, KeyRound, Trash2, Settings
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { API_BASE_URL } from '../api';
@@ -102,12 +101,12 @@ export default function HolderWallet({ user }) {
     }
   };
 
-  const fetchCredentials = async () => {
+  const fetchCredentials = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/credentials`);
       const allCreds = await res.json();
-      
+
       const userName = user?.user_metadata?.full_name?.toLowerCase() || '';
       const userEmail = user?.email?.toLowerCase() || '';
 
@@ -123,16 +122,20 @@ export default function HolderWallet({ user }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchCredentials();
-  }, []);
+  }, [fetchCredentials]);
 
   const openQrModal = async (cred) => {
     setSelectedCred(cred);
     try {
-      const { isRevoked, hash, userEmail, userId, ...cleanPayload } = cred;
+      const cleanPayload = { ...cred };
+      delete cleanPayload.isRevoked;
+      delete cleanPayload.hash;
+      delete cleanPayload.userEmail;
+      delete cleanPayload.userId;
       const payloadString = JSON.stringify(cleanPayload, null, 2);
       const url = await QRCode.toDataURL(payloadString, { width: 320, margin: 2, color: { dark: '#0B1220', light: '#FFFFFF' } });
       setQrUrl(url);
@@ -143,15 +146,15 @@ export default function HolderWallet({ user }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
-      
+
       {/* Header Bar */}
       <div className="clay-card" style={{ padding: '22px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div 
-            style={{ 
-              background: 'linear-gradient(135deg, #10B981 0%, #047857 100%)', 
-              padding: '12px', 
-              borderRadius: '16px', 
+          <div
+            style={{
+              background: 'linear-gradient(135deg, #10B981 0%, #047857 100%)',
+              padding: '12px',
+              borderRadius: '16px',
               color: '#FFFFFF',
               boxShadow: 'var(--clay-pill), var(--neu-glow-green)'
             }}
@@ -178,8 +181,8 @@ export default function HolderWallet({ user }) {
           <button
             onClick={() => setPrivacyMode(!privacyMode)}
             className="btn-secondary"
-            style={{ 
-              borderColor: privacyMode ? 'var(--india-green)' : 'var(--border-subtle)', 
+            style={{
+              borderColor: privacyMode ? 'var(--india-green)' : 'var(--border-subtle)',
               color: privacyMode ? '#34D399' : 'var(--text-main)',
               fontSize: '0.85rem'
             }}
@@ -288,7 +291,7 @@ export default function HolderWallet({ user }) {
               <label style={{ fontSize: '0.8rem', color: 'var(--status-danger)', display: 'block', fontWeight: '700' }}>
                 Self-Sovereign Revocation Zone
               </label>
-              
+
               {selfRevokeStep === 1 ? (
                 <button
                   type="button"
@@ -342,15 +345,15 @@ export default function HolderWallet({ user }) {
       )}
 
       {/* Wallet Category Filter Tabs: Current DID, Revoked DID, Expired DID */}
-      <div 
-        className="clay-card" 
-        style={{ 
-          padding: '12px 18px', 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          flexWrap: 'wrap', 
-          gap: '12px' 
+      <div
+        className="clay-card"
+        style={{
+          padding: '12px 18px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '12px'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -365,9 +368,9 @@ export default function HolderWallet({ user }) {
           <button
             onClick={() => setWalletTab('revoked')}
             className={walletTab === 'revoked' ? 'btn-saffron' : 'btn-ghost'}
-            style={{ 
-              padding: '8px 16px', 
-              fontSize: '0.84rem', 
+            style={{
+              padding: '8px 16px',
+              fontSize: '0.84rem',
               background: walletTab === 'revoked' ? '#DC2626' : 'transparent',
               color: '#FFFFFF'
             }}
@@ -378,8 +381,8 @@ export default function HolderWallet({ user }) {
           <button
             onClick={() => setWalletTab('expired')}
             className={walletTab === 'expired' ? 'btn-saffron' : 'btn-ghost'}
-            style={{ 
-              padding: '8px 16px', 
+            style={{
+              padding: '8px 16px',
               fontSize: '0.84rem',
               background: walletTab === 'expired' ? 'var(--saffron)' : 'transparent',
               color: '#FFFFFF'

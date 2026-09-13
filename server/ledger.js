@@ -37,7 +37,7 @@ class BlockchainLedger {
       if (dbBlocks && dbBlocks.length > 0) {
         // Guarantee Genesis block 0 is at the start
         const mappedBlocks = dbBlocks.map(b => ({
-          index: b.index,
+          index: Number(b.index),
           timestamp: b.timestamp,
           action: b.action,
           credentialId: b.credential_id,
@@ -45,7 +45,7 @@ class BlockchainLedger {
           did: b.did,
           previousHash: b.previous_hash,
           hash: b.hash
-        }));
+        })).sort((a, b) => a.index - b.index);
 
         const hasGenesis = mappedBlocks.some(b => b.index === 0);
         if (!hasGenesis) {
@@ -56,6 +56,7 @@ class BlockchainLedger {
       } else {
         this.chain = [genesis];
       }
+      this.chain.sort((a, b) => Number(a.index) - Number(b.index));
 
       // 2. Fetch credentials from Supabase 'issued_credentials' table
       const { data: dbCreds } = await supabase.from('issued_credentials').select('*');
@@ -121,12 +122,12 @@ class BlockchainLedger {
   createGenesisBlock() {
     return {
       index: 0,
-      timestamp: new Date('2026-08-23T00:00:00Z').toISOString(),
+      timestamp: '2026-08-23T00:00:00.000Z',
       action: 'GENESIS',
       credentialHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
       did: 'did:verichain:root',
       previousHash: '0',
-      hash: this.calculateBlockHash(0, '2026-08-23T00:00:00Z', 'GENESIS', '0x00', 'did:verichain:root', '0')
+      hash: '0xff3b84645960b58df90866ef44db9460e471b19ea85fc92b7d238bc2ed1882ff'
     };
   }
 
@@ -273,15 +274,33 @@ class BlockchainLedger {
       return {
         status: 'REVOKED',
         valid: false,
+        isRevoked: true,
         message: 'Credential has been revoked by the issuing authority.',
         computedHash,
         storedHash: stored ? this.computeCredentialHash(stored) : null,
-        isRevoked: true,
         tampered: false
       };
     }
 
-    // 3. Find block issuance record
+    // 3. Check expiration
+    const expiryDateStr = credentialPayload.validUntil || credentialPayload.expiryDate;
+    if (expiryDateStr && expiryDateStr !== 'Lifetime') {
+      const expiryTime = new Date(expiryDateStr).getTime();
+      if (!isNaN(expiryTime) && expiryTime < Date.now()) {
+        return {
+          status: 'EXPIRED',
+          valid: false,
+          isExpired: true,
+          message: `Credential expired on ${expiryDateStr}.`,
+          computedHash,
+          storedHash: stored ? this.computeCredentialHash(stored) : null,
+          isRevoked: false,
+          tampered: false
+        };
+      }
+    }
+
+    // 4. Find block issuance record
     const issueBlock = this.chain.find(
       (b) => b.action === 'CREDENTIAL_ISSUED' && b.credentialId === id
     );

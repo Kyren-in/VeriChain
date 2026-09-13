@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
-import { X, Camera, Image, Upload, AlertCircle, Sparkles } from 'lucide-react';
+import { X, Camera, Image, AlertCircle } from 'lucide-react';
 
 export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
   const scannerRef = useRef(null);
@@ -9,11 +9,7 @@ export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    if (!isOpen) {
-      setGalleryError('');
-      setIsProcessingFile(false);
-      return;
-    }
+    if (!isOpen) return;
 
     // Small timeout to allow DOM node to render
     const timer = setTimeout(() => {
@@ -30,7 +26,7 @@ export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
             scanner.clear().catch(console.error);
             onClose();
           },
-          (error) => {
+          (_error) => {
             // Ignore ongoing frame decode errors
           }
         );
@@ -47,7 +43,7 @@ export default function QrScannerModal({ isOpen, onClose, onScanSuccess }) {
         scannerRef.current.clear().catch(console.error);
       }
     };
-  }, [isOpen]);
+  }, [isOpen, onClose, onScanSuccess]);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];

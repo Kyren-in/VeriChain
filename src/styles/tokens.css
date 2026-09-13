@@ -1,0 +1,198 @@
+/* ==========================================================================
+   VeriChain Centralized Design Tokens (PRD Specification)
+   ========================================================================== */
+
+:root {
+  /* Brand Core Accents (Professional GovTech / Security Royal Blue Family) */
+  --brand-navy: #060D1E;
+  --brand-dark-blue: #0A1738;
+  --brand-royal-blue: #2563EB;
+  --brand-royal-blue-hover: #1D4ED8;
+  --brand-indigo: #1D4ED8;
+  --brand-violet: #2563EB;
+  --brand-cyan: #0284C7;
+  --brand-cyan-light: #38BDF8;
+  --brand-success: #10B981;
+  --brand-warning: #F59E0B;
+  --brand-danger: #EF4444;
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Border Radii (16-24px standard for cards) */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Gradients (Harmonious same-family royal blue & cobalt depth) */
+  --grad-brand: linear-gradient(135deg, #1D4ED8 0%, #2563EB 55%, #3B82F6 100%);
+  --grad-brand-hover: linear-gradient(135deg, #1E40AF 0%, #1D4ED8 55%, #2563EB 100%);
+  --grad-wallet: linear-gradient(135deg, #0A1E4A 0%, #153477 50%, #1D4ED8 100%);
+  --grad-cyan: linear-gradient(135deg, #0284C7 0%, #2563EB 100%);
+  --grad-success: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  --grad-danger: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
+  --grad-saffron: linear-gradient(135deg, #EA580C 0%, #F97316 100%);
+
+  /* Default to Dark Theme (Crisp, authoritative midnight navy) */
+  --bg-primary: #050B18;
+  --bg-surface: #091326;
+  --bg-surface-2: #0E1C38;
+  --bg-surface-3: #14274E;
+  --bg-surface-sunken: #030710;
+  --bg-card: #0A152B;
+  --bg-card-hover: #0F1E3D;
+  
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.14);
+  --border-strong: rgba(255, 255, 255, 0.24);
+  --border-focus: #3B82F6;
+
+  /* High-visibility typography */
+  --text-primary: #FFFFFF;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-dim: #7E8FA6;
+  --text-inverse: #050B18;
+
+  /* Refined, professional drop-shadows without over-blurred halos */
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --glow-accent: rgba(37, 99, 235, 0.22);
+  --glow-cyan: rgba(56, 189, 248, 0.18);
+  --glow-success: rgba(16, 185, 129, 0.18);
+  
+  --badge-valid-bg: rgba(16, 185, 129, 0.12);
+  --badge-valid-text: #34D399;
+  --badge-valid-border: rgba(16, 185, 129, 0.32);
+
+  --badge-revoked-bg: rgba(239, 68, 68, 0.12);
+  --badge-revoked-text: #F87171;
+  --badge-revoked-border: rgba(239, 68, 68, 0.32);
+
+  --badge-issued-bg: rgba(37, 99, 235, 0.14);
+  --badge-issued-text: #60A5FA;
+  --badge-issued-border: rgba(37, 99, 235, 0.32);
+
+  /* Legacy variable bridges */
+  --bg-midnight: var(--bg-primary);
+  --bg-midnight-card: var(--bg-card);
+  --text-main: var(--text-primary);
+  --digital-blue: var(--brand-royal-blue);
+  --digital-blue-light: #60A5FA;
+  --india-green-soft: var(--badge-valid-bg);
+}
+
+/* Explicit Dark Theme */
+[data-theme="dark"] {
+  --bg-primary: #050B18;
+  --bg-surface: #091326;
+  --bg-surface-2: #0E1C38;
+  --bg-surface-3: #14274E;
+  --bg-surface-sunken: #030710;
+  --bg-card: #0A152B;
+  --bg-card-hover: #0F1E3D;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.14);
+  --border-strong: rgba(255, 255, 255, 0.24);
+  --border-focus: #3B82F6;
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-dim: #7E8FA6;
+  --text-inverse: #050B18;
+
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --glow-accent: rgba(37, 99, 235, 0.22);
+  --glow-cyan: rgba(56, 189, 248, 0.18);
+  --glow-success: rgba(16, 185, 129, 0.18);
+
+  --badge-valid-bg: rgba(16, 185, 129, 0.12);
+  --badge-valid-text: #34D399;
+  --badge-valid-border: rgba(16, 185, 129, 0.32);
+
+  --badge-revoked-bg: rgba(239, 68, 68, 0.12);
+  --badge-revoked-text: #F87171;
+  --badge-revoked-border: rgba(239, 68, 68, 0.32);
+
+  --badge-issued-bg: rgba(37, 99, 235, 0.14);
+  --badge-issued-text: #60A5FA;
+  --badge-issued-border: rgba(37, 99, 235, 0.32);
+
+  --bg-midnight: var(--bg-primary);
+  --bg-midnight-card: var(--bg-card);
+  --text-main: var(--text-primary);
+}
+
+/* Explicit Light Theme */
+[data-theme="light"] {
+  --bg-primary: #F4F6FB;
+  --bg-surface: #FFFFFF;
+  --bg-surface-2: #EAEFF9;
+  --bg-surface-3: #DDE5F5;
+  --bg-surface-sunken: #EDF2F7;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F8FAFD;
+
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-default: rgba(15, 23, 42, 0.14);
+  --border-strong: rgba(15, 23, 42, 0.24);
+  --border-focus: #2563EB;
+
+  --text-primary: #09132C;
+  --text-secondary: #1E293B;
+  --text-muted: #475569;
+  --text-dim: #64748B;
+  --text-inverse: #FFFFFF;
+
+  --card-shadow: 0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --card-shadow-hover: 0 8px 24px rgba(15, 23, 42, 0.10), 0 2px 6px rgba(15, 23, 42, 0.06);
+  --glow-accent: rgba(37, 99, 235, 0.12);
+  --glow-cyan: rgba(2, 132, 199, 0.14);
+  --glow-success: rgba(16, 185, 129, 0.14);
+
+  --badge-valid-bg: rgba(16, 185, 129, 0.10);
+  --badge-valid-text: #047857;
+  --badge-valid-border: rgba(16, 185, 129, 0.30);
+
+  --badge-revoked-bg: rgba(239, 68, 68, 0.10);
+  --badge-revoked-text: #B91C1C;
+  --badge-revoked-border: rgba(239, 68, 68, 0.30);
+
+  --badge-issued-bg: rgba(37, 99, 235, 0.10);
+  --badge-issued-text: #1D4ED8;
+  --badge-issued-border: rgba(37, 99, 235, 0.30);
+
+  --bg-midnight: var(--bg-primary);
+  --bg-midnight-card: var(--bg-card);
+  --text-main: #09132C;
+}
+
+@keyframes skeletonPulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}

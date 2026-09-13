@@ -4,7 +4,16 @@ services:
     env: node
     buildCommand: npm install && npm run build
     startCommand: npm start
-    disk:
-      name: verichain-ledger-data
-      mountPath: /var/data
-      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
