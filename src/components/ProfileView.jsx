@@ -214,7 +214,7 @@ export default function ProfileView() {
             title="Click to copy DID"
           >
             <ShieldCheck size={14} />
-            <span className="mono-text">{userProfile.did.substring(0, 24)}...</span>
+            <span className="mono-text">{userProfile?.did ? `${userProfile.did.substring(0, 24)}...` : 'did:verichain:anonymous'}</span>
             <Copy size={12} color="var(--text-muted)" />
           </div>
         )}
@@ -466,7 +466,7 @@ export default function ProfileView() {
               <span style={{ fontSize: '0.72rem', color: '#10B981', fontWeight: '700' }}>Active</span>
             </div>
             <div className="mono-text" style={{ fontSize: '0.76rem', color: 'var(--brand-royal-blue)', wordBreak: 'break-all' }}>
-              {userProfile.did}
+              {userProfile?.did || 'did:verichain:not-generated'}
             </div>
           </div>
 

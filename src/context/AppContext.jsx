@@ -60,6 +60,16 @@ export function adaptCredential(cred) {
   };
 }
 
+export const DEFAULT_GUEST_PROFILE = {
+  name: 'Guest User',
+  email: '',
+  phone: '',
+  passportNumber: '',
+  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250',
+  did: '',
+  role: 'guest'
+};
+
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
@@ -78,7 +88,7 @@ export function AppProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // User Profile loaded from Supabase
-  const [userProfile, setUserProfile] = useState(null);
+  const [userProfile, setUserProfile] = useState(DEFAULT_GUEST_PROFILE);
 
   const showToast = useCallback((message, type = 'info', duration = 3500) => {
     const id = Date.now() + Math.random().toString(36).substring(2, 5);
@@ -208,7 +218,7 @@ export function AppProvider({ children }) {
           await loadUserProfileFromSupabase(data.session.user);
         } else {
           setIsAuthenticated(false);
-          setUserProfile(null);
+          setUserProfile(DEFAULT_GUEST_PROFILE);
         }
 
         await fetchCredentials();
@@ -236,7 +246,7 @@ export function AppProvider({ children }) {
         setSession(null);
         setUser(null);
         setIsAuthenticated(false);
-        setUserProfile(null);
+        setUserProfile(DEFAULT_GUEST_PROFILE);
         setCredentials([]);
       }
     });
@@ -325,7 +335,7 @@ export function AppProvider({ children }) {
     setSession(null);
     setUser(null);
     setIsAuthenticated(false);
-    setUserProfile(null);
+    setUserProfile(DEFAULT_GUEST_PROFILE);
     setCredentials([]);
     setSelectedCredentialId(null);
     setActivities([]);

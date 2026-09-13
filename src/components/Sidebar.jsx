@@ -121,15 +121,15 @@ export default function Sidebar() {
             style={{ flex: 1 }}
           >
             <img 
-              src={userProfile.avatar} 
-              alt={userProfile.name} 
+              src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'} 
+              alt={userProfile?.name || 'User Profile'} 
               className="user-avatar-img"
             />
             <div className="sidebar-user-info">
-              <div className="user-info-name">{isAuthenticated ? userProfile.name : 'Guest User'}</div>
+              <div className="user-info-name">{isAuthenticated ? (userProfile?.name || 'Citizen') : 'Guest User'}</div>
               <div className="user-info-role">
                 <Shield size={11} />
-                <span>{isAuthenticated ? (userProfile.role || 'Verified Holder') : 'Sign In'}</span>
+                <span>{isAuthenticated ? (userProfile?.role || 'Verified Holder') : 'Sign In'}</span>
               </div>
             </div>
           </div>

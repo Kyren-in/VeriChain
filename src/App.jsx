@@ -2,6 +2,7 @@ import React from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppProvider, useApp } from './context/AppContext';
 import AppShell from './components/AppShell';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Primary Views
 import LandingPage from './components/LandingPage';
@@ -76,12 +77,16 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AppProvider>
-        <AppShell>
-          <AppContent />
-        </AppShell>
-      </AppProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AppProvider>
+          <AppShell>
+            <ErrorBoundary>
+              <AppContent />
+            </ErrorBoundary>
+          </AppShell>
+        </AppProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

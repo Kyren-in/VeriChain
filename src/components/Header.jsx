@@ -219,8 +219,8 @@ export default function Header() {
             title="Go to Profile"
           >
             <img
-              src={userProfile.avatar}
-              alt={userProfile.name}
+              src={userProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'}
+              alt={userProfile?.name || 'User Profile'}
               style={{
                 width: '30px',
                 height: '30px',
@@ -229,7 +229,7 @@ export default function Header() {
               }}
             />
             <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-primary)', paddingRight: '4px' }}>
-              {userProfile.name.split(' ')[0]}
+              {userProfile?.name ? userProfile.name.split(' ')[0] : 'Citizen'}
             </span>
           </div>
         ) : (
