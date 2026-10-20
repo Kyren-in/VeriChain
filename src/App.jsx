@@ -476,6 +476,59 @@ export default function App() {
         {activeTab === 'admin' && userRole === 'admin' && <AdminPortal />}
       </main>
 
+      {/* Mobile app navigation — mirrors the supplied wallet concept while using existing routes and role guards. */}
+      {session && (
+        <nav className="mobile-bottom-nav" aria-label="Mobile app navigation">
+          <button
+            type="button"
+            className={activeTab === 'landing' ? 'mobile-bottom-nav-item is-active' : 'mobile-bottom-nav-item'}
+            aria-current={activeTab === 'landing' ? 'page' : undefined}
+            onClick={() => setActiveTab('landing')}
+          >
+            <Home size={19} strokeWidth={activeTab === 'landing' ? 2.5 : 2} />
+            <span>Home</span>
+          </button>
+          {(userRole === 'user' || userRole === 'issuer' || userRole === 'admin') && (
+            <button
+              type="button"
+              className={activeTab === 'wallet' ? 'mobile-bottom-nav-item is-active' : 'mobile-bottom-nav-item'}
+              aria-current={activeTab === 'wallet' ? 'page' : undefined}
+              onClick={() => handleProtectedNavigate('wallet')}
+            >
+              <Wallet size={19} strokeWidth={activeTab === 'wallet' ? 2.5 : 2} />
+              <span>Wallet</span>
+            </button>
+          )}
+          {(userRole === 'verifier' || userRole === 'issuer' || userRole === 'admin') && (
+            <button
+              type="button"
+              className={activeTab === 'verifier' ? 'mobile-bottom-nav-item is-active' : 'mobile-bottom-nav-item'}
+              aria-current={activeTab === 'verifier' ? 'page' : undefined}
+              onClick={() => handleProtectedNavigate('verifier')}
+            >
+              <Scan size={19} strokeWidth={activeTab === 'verifier' ? 2.5 : 2} />
+              <span>Scan</span>
+            </button>
+          )}
+          <button
+            type="button"
+            className={['admin', 'issuer', 'verifier'].includes(userRole)
+              ? (activeTab === userRole ? 'mobile-bottom-nav-item is-active' : 'mobile-bottom-nav-item')
+              : (activeTab === 'explorer' ? 'mobile-bottom-nav-item is-active' : 'mobile-bottom-nav-item')}
+            aria-current={activeTab === (['admin', 'issuer', 'verifier'].includes(userRole) ? userRole : 'explorer') ? 'page' : undefined}
+            onClick={() => {
+              if (userRole === 'admin') setActiveTab('admin');
+              else if (userRole === 'issuer') setActiveTab('issuer');
+              else if (userRole === 'verifier') setActiveTab('verifier');
+              else setActiveTab('explorer');
+            }}
+          >
+            <User size={19} />
+            <span>{userRole === 'admin' ? 'Admin' : userRole === 'issuer' ? 'Issuer' : userRole === 'verifier' ? 'Profile' : 'Activity'}</span>
+          </button>
+        </nav>
+      )}
+
       {/* Auth Modal */}
       <AuthModal 
         isOpen={isAuthOpen} 
