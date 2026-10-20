@@ -790,3 +790,96 @@ button[aria-disabled="true"],
   background: rgba(82, 107, 224, 0.10);
 }
 
+
+
+/* ==========================================================================
+   VeriChain reference-inspired light identity UI
+   Default visual language: porcelain white, soft lavender, deep navy, vivid
+   indigo accents and mint verification states.
+   ========================================================================== */
+:root,
+:root[data-theme="light"],
+:root[data-theme="system"] {
+  color-scheme: light;
+  --bg-midnight: #f5f7ff;
+  --bg-midnight-card: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f0f2ff;
+  --bg-surface-sunken: #eef1fb;
+  --saffron: #7667f5;
+  --saffron-glow: rgba(118, 103, 245, .18);
+  --saffron-soft: rgba(118, 103, 245, .09);
+  --india-green: #12a982;
+  --india-green-glow: rgba(18, 169, 130, .18);
+  --india-green-soft: rgba(18, 169, 130, .10);
+  --digital-blue: #243c88;
+  --digital-blue-glow: rgba(36, 60, 136, .18);
+  --digital-blue-light: #667ff0;
+  --off-white: #f8f9ff;
+  --text-main: #142044;
+  --text-muted: #66718f;
+  --text-dim: #7883a1;
+  --text-subtle: #8b95af;
+  --border-subtle: #e8ebf6;
+  --border-light: #d7def3;
+  --neu-flat: 0 8px 28px rgba(29, 45, 91, .07);
+  --neu-elevated: 0 14px 36px rgba(29, 45, 91, .12);
+  --neu-pressed: inset 0 2px 6px rgba(29, 45, 91, .08);
+  --neu-glow-saffron: 0 8px 24px rgba(118, 103, 245, .15);
+  --neu-glow-blue: 0 10px 30px rgba(36, 60, 136, .14);
+  --neu-glow-green: 0 8px 24px rgba(18, 169, 130, .14);
+  --clay-card: 0 12px 32px rgba(29, 45, 91, .10);
+  --clay-btn: 0 6px 14px rgba(29, 45, 91, .16);
+  --clay-pill: 0 4px 10px rgba(29, 45, 91, .10);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+body {
+  background:
+    radial-gradient(ellipse at 5% 0%, rgba(214, 218, 255, .55), transparent 36%),
+    radial-gradient(ellipse at 95% 12%, rgba(252, 226, 245, .48), transparent 30%),
+    #f5f7ff !important;
+  color: #142044 !important;
+}
+body::before {
+  background-image:
+    radial-gradient(circle at 12% 12%, rgba(118, 103, 245, .06) 0%, transparent 42%),
+    radial-gradient(circle at 86% 22%, rgba(63, 118, 219, .06) 0%, transparent 44%);
+  opacity: .8;
+}
+#root { position: relative; z-index: 1; min-height: 100vh; }
+h1, h2, h3, h4, h5, h6 { color: #142044; }
+.neu-card, .clay-card {
+  background: rgba(255,255,255,.92);
+  color: #142044;
+  border: 1px solid #e7eafa;
+  box-shadow: 0 10px 30px rgba(33, 49, 96, .08);
+  backdrop-filter: blur(16px);
+}
+.neu-card:hover, .clay-card:hover {
+  border-color: #d8dcfa;
+  box-shadow: 0 16px 38px rgba(33, 49, 96, .12);
+}
+.neu-card-inset { background: #f3f5ff; border-color: #e4e8f7; box-shadow: inset 0 2px 6px rgba(33,49,96,.05); }
+.btn-primary {
+  background: linear-gradient(110deg, #172d68, #263f8b);
+  color: #fff;
+  border: 0;
+  box-shadow: 0 8px 18px rgba(31, 53, 120, .18);
+}
+.btn-primary:hover { background: linear-gradient(110deg, #243d83, #334fa4); }
+.clay-badge-saffron { background: linear-gradient(120deg, #8274ff, #6254e8); }
+input, textarea, select {
+  background-color: #fff;
+  color: #172344;
+  border-color: #dfe4f4;
+}
+button, a { -webkit-tap-highlight-color: transparent; }
+::selection { background: rgba(118, 103, 245, .2); color: #142044; }
+@media (max-width: 760px) {
+  body { padding-bottom: env(safe-area-inset-bottom); }
+  .hero-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+  .hero-grid > * { min-width: 0; }
+  .neu-card, .clay-card { border-radius: 20px; }
+}
