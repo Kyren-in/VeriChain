@@ -9,7 +9,8 @@ import AuthModal from './components/AuthModal';
 import { supabase } from './lib/supabaseClient';
 import { 
   Shield, UserCheck, Wallet, Scan, Blocks, Lock, LogIn, LogOut, 
-  User, Menu, X, ShieldAlert, Sparkles, Home, ChevronRight, Mail, FileText, AlertCircle
+  User, Menu, X, ShieldAlert, Sparkles, Home, ChevronRight, Mail, FileText, AlertCircle,
+  Sun, Moon, Monitor
 } from 'lucide-react';
 
 const ADMIN_EMAIL = 'jyotirmay_das@outlook.com';
@@ -21,6 +22,30 @@ export default function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [accessAlert, setAccessAlert] = useState(null); // stores message if unauthorized attempt occurs
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('verichain-theme') || 'system';
+    } catch {
+      return 'system';
+    }
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.theme = theme;
+    root.style.colorScheme = theme === 'system' ? 'light dark' : theme;
+    try {
+      localStorage.setItem('verichain-theme', theme);
+    } catch {
+      // Theme still applies for this session when storage is unavailable.
+    }
+  }, [theme]);
+
+  const cycleTheme = () => {
+    setTheme(current => current === 'system' ? 'light' : current === 'light' ? 'dark' : 'system');
+  };
+
+  const ThemeIcon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor;
 
   useEffect(() => {
     const fetchUserRole = async (user) => {
@@ -309,6 +334,18 @@ export default function App() {
                 </>
               )}
             </nav>
+
+            <button
+              type="button"
+              onClick={cycleTheme}
+              className="btn-secondary theme-toggle"
+              style={{ padding: '8px 10px', fontSize: '0.8rem' }}
+              aria-label={`Theme: ${theme}. Switch to ${theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system'} theme`}
+              title={`Theme: ${theme} (click to change)`}
+            >
+              <ThemeIcon size={16} />
+              <span className="theme-toggle-label">{theme === 'system' ? 'System' : theme === 'light' ? 'Light' : 'Dark'}</span>
+            </button>
 
             {/* Auth Action */}
             {session ? (
