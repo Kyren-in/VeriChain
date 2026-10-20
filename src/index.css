@@ -507,3 +507,63 @@ h1, h2, h3, h4, h5, h6 {
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   Accessibility foundation — additive, theme-token-safe enhancements
+   ========================================================================== */
+
+/* Keep keyboard navigation visible without changing pointer interactions. */
+:where(a, button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+  outline: 3px solid var(--digital-blue-light);
+  outline-offset: 3px;
+}
+
+:where(button, [role="button"], a) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:disabled,
+button[aria-disabled="true"],
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.58;
+  transform: none;
+  box-shadow: none;
+}
+
+.input-field::placeholder {
+  color: var(--text-dim);
+  opacity: 1;
+}
+
+/* Respect operating-system motion preferences across existing animations. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Preserve readable controls when users request stronger system contrast. */
+@media (prefers-contrast: more) {
+  :where(button, input, select, textarea, a) {
+    outline-offset: 3px;
+  }
+
+  .input-field,
+  .btn-primary,
+  .btn-secondary,
+  .btn-saffron,
+  .btn-ghost {
+    border-width: 2px;
+  }
+}
+
