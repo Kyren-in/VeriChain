@@ -24,7 +24,7 @@ export default function App() {
   const [accessAlert, setAccessAlert] = useState(null); // stores message if unauthorized attempt occurs
   const [theme, setTheme] = useState(() => {
     try {
-      return localStorage.getItem('verichain-theme') || 'system';
+      return localStorage.getItem('verichain-theme') || 'light';
     } catch {
       return 'system';
     }
