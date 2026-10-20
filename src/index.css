@@ -567,3 +567,153 @@ button[aria-disabled="true"],
   }
 }
 
+/* ==========================================================================
+   VeriChain V2 visual theme — light/dark/system with preserved core tokens
+   Inspired by the supplied mobile concept: clean white surfaces, deep navy,
+   soft lavender accents, calm gradients and clear credential status colors.
+   ========================================================================== */
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg-midnight: #F4F6FF;
+  --bg-midnight-card: #FFFFFF;
+  --bg-surface: #F0F2FF;
+  --bg-surface-elevated: #E6E9FF;
+  --bg-surface-sunken: #F7F8FE;
+  --off-white: #FFFFFF;
+  --text-main: #111B3C;
+  --text-muted: #596582;
+  --text-dim: #7B86A5;
+  --text-subtle: #9AA3BC;
+  --border-subtle: rgba(26, 43, 91, 0.10);
+  --border-light: rgba(26, 43, 91, 0.18);
+  --digital-blue: #263D86;
+  --digital-blue-light: #526BE0;
+  --digital-blue-glow: rgba(82, 107, 224, 0.18);
+  --saffron-soft: rgba(255, 138, 61, 0.10);
+  --india-green-soft: rgba(16, 185, 129, 0.10);
+  --neu-flat: 0 6px 20px rgba(41, 54, 110, 0.08), 0 1px 3px rgba(41, 54, 110, 0.04);
+  --neu-elevated: 0 12px 30px rgba(41, 54, 110, 0.12), 0 2px 6px rgba(41, 54, 110, 0.05);
+  --neu-pressed: inset 2px 2px 6px rgba(41, 54, 110, 0.07), inset -2px -2px 6px rgba(255, 255, 255, 0.85);
+  --clay-card: 0 12px 30px rgba(41, 54, 110, 0.10), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+  --clay-btn: 0 5px 12px rgba(28, 45, 104, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+  --clay-pill: 0 3px 8px rgba(28, 45, 104, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    color-scheme: light;
+    --bg-midnight: #F4F6FF;
+    --bg-midnight-card: #FFFFFF;
+    --bg-surface: #F0F2FF;
+    --bg-surface-elevated: #E6E9FF;
+    --bg-surface-sunken: #F7F8FE;
+    --off-white: #FFFFFF;
+    --text-main: #111B3C;
+    --text-muted: #596582;
+    --text-dim: #7B86A5;
+    --text-subtle: #9AA3BC;
+    --border-subtle: rgba(26, 43, 91, 0.10);
+    --border-light: rgba(26, 43, 91, 0.18);
+    --digital-blue: #263D86;
+    --digital-blue-light: #526BE0;
+    --digital-blue-glow: rgba(82, 107, 224, 0.18);
+    --saffron-soft: rgba(255, 138, 61, 0.10);
+    --india-green-soft: rgba(16, 185, 129, 0.10);
+    --neu-flat: 0 6px 20px rgba(41, 54, 110, 0.08), 0 1px 3px rgba(41, 54, 110, 0.04);
+    --neu-elevated: 0 12px 30px rgba(41, 54, 110, 0.12), 0 2px 6px rgba(41, 54, 110, 0.05);
+    --neu-pressed: inset 2px 2px 6px rgba(41, 54, 110, 0.07), inset -2px -2px 6px rgba(255, 255, 255, 0.85);
+    --clay-card: 0 12px 30px rgba(41, 54, 110, 0.10), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+    --clay-btn: 0 5px 12px rgba(28, 45, 104, 0.18), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+    --clay-pill: 0 3px 8px rgba(28, 45, 104, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  }
+}
+
+:root[data-theme="light"] body,
+:root[data-theme="system"] body {
+  background-color: var(--bg-midnight);
+  color: var(--text-main);
+}
+
+:root[data-theme="light"] body::before,
+:root[data-theme="system"] body::before {
+  background-image:
+    radial-gradient(circle at 12% 10%, rgba(119, 132, 255, 0.10) 0%, transparent 42%),
+    radial-gradient(circle at 88% 16%, rgba(255, 176, 215, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 52% 90%, rgba(79, 193, 191, 0.08) 0%, transparent 48%);
+  background-size: 100% 100%, 100% 100%, 100% 100%;
+}
+
+:root[data-theme="light"] .neu-card,
+:root[data-theme="system"] .neu-card {
+  background: var(--bg-midnight-card);
+  border-color: var(--border-subtle);
+  box-shadow: var(--neu-flat);
+}
+
+:root[data-theme="light"] .clay-card,
+:root[data-theme="system"] .clay-card,
+:root[data-theme="light"] .glass-panel,
+:root[data-theme="system"] .glass-panel {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(243, 245, 255, 0.96));
+  border-color: var(--border-subtle);
+  box-shadow: var(--clay-card);
+}
+
+:root[data-theme="light"] .neu-card-inset,
+:root[data-theme="system"] .neu-card-inset {
+  background: var(--bg-surface-sunken);
+  border-color: var(--border-subtle);
+  box-shadow: var(--neu-pressed);
+}
+
+:root[data-theme="light"] .btn-secondary,
+:root[data-theme="system"] .btn-secondary {
+  background: #FFFFFF;
+  color: var(--text-main);
+  border-color: var(--border-subtle);
+}
+
+:root[data-theme="light"] .btn-ghost,
+:root[data-theme="system"] .btn-ghost {
+  color: var(--text-muted);
+}
+
+:root[data-theme="light"] .btn-ghost:hover,
+:root[data-theme="system"] .btn-ghost:hover {
+  color: var(--text-main);
+  background: rgba(82, 107, 224, 0.08);
+}
+
+:root[data-theme="light"] .input-field,
+:root[data-theme="system"] .input-field {
+  background: #FFFFFF;
+  color: var(--text-main);
+  border-color: var(--border-subtle);
+}
+
+:root[data-theme="light"] .tricolor-stripe,
+:root[data-theme="system"] .tricolor-stripe {
+  opacity: 1;
+}
+
+:root[data-theme="light"] .theme-toggle,
+:root[data-theme="system"] .theme-toggle {
+  background: #FFFFFF;
+  color: var(--text-main);
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] .neu-card { background: var(--bg-midnight-card); }
+}
+
+/* Theme-aware responsive polish for the existing desktop/mobile navigation. */
+.theme-toggle {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .theme-toggle-label { display: none; }
+}
+
