@@ -7,19 +7,19 @@ export default function AdminPortal() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [statusMsg, setStatusMsg] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchUsers = async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const { data, error } = await supabase.from('profiles').select('*');
-      if (data) {
-        setUsersList(data);
-      } else {
-        setUsersList([]);
-      }
+      if (error) throw error;
+      setUsersList(data || []);
     } catch (err) {
       console.error('Error fetching users:', err);
+      setLoadError('Unable to load registered identities. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -30,23 +30,34 @@ export default function AdminPortal() {
   }, []);
 
   const handleRoleChange = async (userId, newRole) => {
+    const previousUser = usersList.find(user => user.id === userId);
+    if (!previousUser || (previousUser.role || 'user') === newRole) return;
+
     setUpdatingId(userId);
     setStatusMsg('');
 
     try {
-      setUsersList(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
-      await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
-      setStatusMsg(`Role updated to ${newRole.toUpperCase()} successfully!`);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      setUsersList(prev => prev.map(user => user.id === userId ? { ...user, role: newRole } : user));
+      setStatusMsg(`Role updated to ${newRole.toUpperCase()} successfully.`);
     } catch (err) {
-      setStatusMsg('Error updating role: ' + err.message);
+      console.error('Error updating user role:', err);
+      setStatusMsg('Role update failed. The previous role has been kept. Check permissions or try again.');
     } finally {
       setUpdatingId(null);
     }
   };
 
-  const filteredUsers = usersList.filter(u => 
-    u.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (u.full_name && u.full_name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredUsers = usersList.filter(user =>
+    (user.email || '').toLowerCase().includes(normalizedQuery) ||
+    (user.full_name || '').toLowerCase().includes(normalizedQuery)
   );
 
   return (
@@ -85,7 +96,18 @@ export default function AdminPortal() {
       </div>
 
       {statusMsg && (
-        <div style={{ padding: '12px 16px', borderRadius: '12px', background: 'var(--india-green-soft)', color: '#34D399', fontSize: '0.85rem', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            padding: '12px 16px',
+            borderRadius: '12px',
+            background: statusMsg.startsWith('Role update failed') ? 'rgba(239, 68, 68, 0.12)' : 'var(--india-green-soft)',
+            color: statusMsg.startsWith('Role update failed') ? '#FCA5A5' : '#34D399',
+            fontSize: '0.85rem',
+            border: statusMsg.startsWith('Role update failed') ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)'
+          }}
+        >
           {statusMsg}
         </div>
       )}
@@ -110,7 +132,24 @@ export default function AdminPortal() {
         </div>
 
         {loading ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-dim)' }}>Loading registered users...</div>
+          <div role="status" aria-live="polite" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-dim)' }}>Loading registered users...</div>
+        ) : loadError ? (
+          <div role="alert" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <p style={{ marginBottom: '14px' }}>{loadError}</p>
+            <button onClick={fetchUsers} className="btn-secondary" style={{ padding: '10px 18px' }}>
+              <RefreshCw size={15} /> Try again
+            </button>
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <Users size={24} style={{ marginBottom: '10px' }} />
+            <p style={{ fontWeight: '700', marginBottom: '4px' }}>
+              {normalizedQuery ? 'No identities match your search' : 'No registered identities found'}
+            </p>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-dim)' }}>
+              {normalizedQuery ? 'Try a different name or email address.' : 'Registered profiles will appear here when available.'}
+            </p>
+          </div>
         ) : (
           <div>
             {/* Desktop Table */}
